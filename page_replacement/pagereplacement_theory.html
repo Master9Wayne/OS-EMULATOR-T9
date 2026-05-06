@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Replacement Algorithms - Theory</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #cf731d;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #d06219;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #16a085;
+        }
+        
+        .algorithm {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .theory {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .code {
+            background-color: hsla(68, 100%, 72%, 0.933);
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+        }
+        
+        .advantages, .disadvantages {
+            margin: 15px 0;
+        }
+        
+        .advantages h3 {
+            color: #27ae60;
+        }
+        
+        .disadvantages h3 {
+            color: #c0392b;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .complexity {
+            background-color: #eaf2f8;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 15px 0;
+        }
+        
+        .note {
+            background-color: #f9edc7;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Page Replacement Algorithms - Theoretical Explanations</h1>
+    
+    <div class="theory">
+        <p>Page replacement algorithms are essential components of virtual memory management in operating systems. When a page fault occurs and all memory frames are in use, the operating system must decide which page to evict to make room for the new page.</p>
+        <p>The goal of these algorithms is to minimize the number of page faults and maximize memory utilization, thus improving system performance.</p>
+    </div>
+    
+    <div class="algorithm">
+        <h2>1. FIFO (First-In-First-Out)</h2>
+        
+        <div class="theory">
+            <p><strong>Theory:</strong> The First-In-First-Out algorithm replaces the page that has been in memory for the longest time. It operates on the principle that older pages are less likely to be used again.</p>
+            
+            <ul>
+                <li>Maintains a queue to track the order pages were brought into memory</li>
+                <li>When a page fault occurs and all frames are full, the oldest page (at the head of the queue) is removed</li>
+                <li>The new page is added to the tail of the queue</li>
+            </ul>
+        </div>
+        
+        <div class="code">
+            <pre><code>function FIFO(referenceString, frameCount) {
+    // Initialize variables
+    let frames = new Array(frameCount).fill(-1);  // -1 indicates empty frame
+    let queue = [];  // Queue to track order of pages loaded into memory
+    let pageFaults = 0;
+    
+    // Process each page in the reference string
+    for (let page of referenceString) {
+        // Check if page is already in memory (page hit)
+        if (frames.includes(page)) {
+            // Page hit - no action needed in FIFO
+            continue;
+        }
+        
+        // Page fault occurred
+        pageFaults++;
+        
+        if (queue.length < frameCount) {
+            // If we have empty frames, use them
+            frames[queue.length] = page;
+            queue.push(page);
+        } else {
+            // Replace the oldest page (first in the queue)
+            let oldestPage = queue.shift();  // Remove the oldest page from queue
+            let index = frames.indexOf(oldestPage);
+            frames[index] = page;  // Replace oldest page with new page
+            queue.push(page);      // Add new page to end of queue
+        }
+    }
+    
+    return pageFaults;
+}</code></pre>
+        </div>
+        
+        <div class="advantages">
+            <h3>Advantages:</h3>
+            <ul>
+                <li>Simple to understand and implement</li>
+                <li>Low overhead - requires only a queue</li>
+                <li>No need to track page access history</li>
+            </ul>
+        </div>
+        
+        <div class="disadvantages">
+            <h3>Disadvantages:</h3>
+            <ul>
+                <li>Does not consider frequency or recency of use</li>
+                <li>Can suffer from Belady's Anomaly - increasing frames can increase page faults</li>
+                <li>Often performs poorly compared to more sophisticated algorithms</li>
+                <li>May remove frequently used pages simply because they were loaded early</li>
+            </ul>
+        </div>
+        
+        <div class="complexity">
+            <p><strong>Time Complexity:</strong> O(1) for page replacement operation</p>
+            <p><strong>Space Complexity:</strong> O(n) where n is the number of frames</p>
+        </div>
+    </div>
+    
+    <div class="algorithm">
+        <h2>2. LRU (Least Recently Used)</h2>
+        
+        <div class="theory">
+            <p><strong>Theory:</strong> The Least Recently Used algorithm replaces the page that hasn't been accessed for the longest period of time. It's based on the principle of temporal locality - recently used pages are likely to be used again soon.</p>
+            
+            <ul>
+                <li>Requires tracking when each page was last accessed</li>
+                <li>When a page fault occurs, the page with the oldest access time is replaced</li>
+                <li>Each time a page is referenced, it becomes the most recently used</li>
+            </ul>
+        </div>
+        
+        <div class="code">
+            <pre><code>function LRU(referenceString, frameCount) {
+    // Initialize variables
+    let frames = new Array(frameCount).fill(-1);  // -1 indicates empty frame
+    let usageHistory = [];  // Tracks order of page usage (most recently used at the end)
+    let pageFaults = 0;
+    
+    // Process each page in the reference string
+    for (let page of referenceString) {
+        // Check if page is already in memory (page hit)
+        if (frames.includes(page)) {
+            // Page hit - update usage history (move page to end of history)
+            usageHistory = usageHistory.filter(p => p !== page);
+            usageHistory.push(page);
+            continue;
+        }
+        
+        // Page fault occurred
+        pageFaults++;
+        
+        if (usageHistory.length < frameCount) {
+            // If we have empty frames, use them
+            frames[usageHistory.length] = page;
+            usageHistory.push(page);
+        } else {
+            // Replace the least recently used page
+            let lruPage = usageHistory.shift();  // Get least recently used page
+            let index = frames.indexOf(lruPage);
+            frames[index] = page;     // Replace LRU page with new page
+            usageHistory.push(page);  // Add new page as most recently used
+        }
+    }
+    
+    return pageFaults;
+}</code></pre>
+        </div>
+        
+        <div class="advantages">
+            <h3>Advantages:</h3>
+            <ul>
+                <li>Generally performs well in practice</li>
+                <li>Exploits temporal locality of reference</li>
+                <li>Does not suffer from Belady's Anomaly</li>
+                <li>Approximates optimal algorithm fairly well in many cases</li>
+            </ul>
+        </div>
+        
+        <div class="disadvantages">
+            <h3>Disadvantages:</h3>
+            <ul>
+                <li>More complex to implement efficiently</li>
+                <li>Requires additional overhead to track access history</li>
+                <li>Hardware implementation can be expensive</li>
+                <li>Does not consider frequency of use</li>
+            </ul>
+        </div>
+        
+        <div class="complexity">
+            <p><strong>Time Complexity:</strong> O(n) for finding least recently used page (can be optimized to O(1) with proper data structures)</p>
+            <p><strong>Space Complexity:</strong> O(n) where n is the number of frames</p>
+        </div>
+    </div>
+    
+    <div class="algorithm">
+        <h2>3. LFU (Least Frequently Used)</h2>
+        
+        <div class="theory">
+            <p><strong>Theory:</strong> The Least Frequently Used algorithm replaces the page with the lowest reference frequency. If there's a tie, it usually selects the least recently used page among those with the lowest frequency.</p>
+            
+            <ul>
+                <li>Maintains a counter for each page to track access frequency</li>
+                <li>When a page fault occurs, the page with the lowest counter value is replaced</li>
+                <li>Each time a page is referenced, its counter is incremented</li>
+            </ul>
+        </div>
+        
+        <div class="code">
+            <pre><code>function LFU(referenceString, frameCount) {
+    // Initialize variables
+    let frames = new Array(frameCount).fill(-1);  // -1 indicates empty frame
+    let frequencies = {};   // Maps page → frequency count
+    let timestamps = {};    // Maps page → timestamp (for tie-breaking)
+    let pageFaults = 0;
+    let time = 0;
+    
+    // Process each page in the reference string
+    for (let page of referenceString) {
+        time++;  // Increment timestamp
+        
+        // Initialize or update frequency counter and timestamp
+        frequencies[page] = (frequencies[page] || 0) + 1;
+        timestamps[page] = time;
+        
+        // Check if page is already in memory (page hit)
+        if (frames.includes(page)) {
+            // Page hit - frequency already updated
+            continue;
+        }
+        
+        // Page fault occurred
+        pageFaults++;
+        
+        // If we have empty frames, use them
+        let emptyIndex = frames.indexOf(-1);
+        if (emptyIndex !== -1) {
+            frames[emptyIndex] = page;
+            continue;
+        }
+        
+        // Need to replace a page - find the least frequently used
+        let minFrequency = Infinity;
+        let oldestTimestamp = Infinity;
+        let replaceIndex = 0;
+        
+        for (let i = 0; i < frameCount; i++) {
+            let currentPage = frames[i];
+            let frequency = frequencies[currentPage];
+            let timestamp = timestamps[currentPage];
+            
+            // Find page with lowest frequency, breaking ties with oldest timestamp
+            if (frequency < minFrequency || 
+                (frequency === minFrequency && timestamp < oldestTimestamp)) {
+                minFrequency = frequency;
+                oldestTimestamp = timestamp;
+                replaceIndex = i;
+            }
+        }
+        
+        // Replace the selected page
+        frames[replaceIndex] = page;
+    }
+    
+    return pageFaults;
+}</code></pre>
+        </div>
+        
+        <div class="advantages">
+            <h3>Advantages:</h3>
+            <ul>
+                <li>Works well for workloads with clear frequency patterns</li>
+                <li>Takes advantage of frequency-based locality</li>
+                <li>Does not suffer from Belady's Anomaly</li>
+                <li>Can outperform LRU in certain workloads</li>
+            </ul>
+        </div>
+        
+        <div class="disadvantages">
+            <h3>Disadvantages:</h3>
+            <ul>
+                <li>Does not consider recency for pages with same frequency</li>
+                <li>May retain pages with initially high frequency even if they won't be used again</li>
+                <li>More complex to implement than FIFO</li>
+                <li>Historical frequency may not be relevant to future usage</li>
+            </ul>
+        </div>
+        
+        <div class="complexity">
+            <p><strong>Time Complexity:</strong> O(n) for finding least frequently used page</p>
+            <p><strong>Space Complexity:</strong> O(m) where m is the number of unique pages in reference string</p>
+        </div>
+    </div>
+    
+    <div class="algorithm">
+        <h2>4. Optimal Algorithm</h2>
+        
+        <div class="theory">
+            <p><strong>Theory:</strong> The Optimal algorithm replaces the page that won't be used for the longest time in the future. It requires knowing the future page reference pattern, which is impossible in real systems, making it theoretical.</p>
+            
+            <ul>
+                <li>When a page fault occurs, it looks ahead in the reference string</li>
+                <li>Chooses to replace the page that will not be used for the longest period of time</li>
+                <li>If multiple pages won't be used again, it replaces any of them</li>
+            </ul>
+        </div>
+        
+        <div class="code">
+            <pre><code>function Optimal(referenceString, frameCount) {
+    // Initialize variables
+    let frames = new Array(frameCount).fill(-1);  // -1 indicates empty frame
+    let pageFaults = 0;
+    
+    // Process each page in the reference string
+    for (let currentIndex = 0; currentIndex < referenceString.length; currentIndex++) {
+        let page = referenceString[currentIndex];
+        
+        // Check if page is already in memory (page hit)
+        if (frames.includes(page)) {
+            // Page hit - no action needed
+            continue;
+        }
+        
+        // Page fault occurred
+        pageFaults++;
+        
+        // If we have empty frames, use them
+        let emptyIndex = frames.indexOf(-1);
+        if (emptyIndex !== -1) {
+            frames[emptyIndex] = page;
+            continue;
+        }
+        
+        // Need to replace a page - find the one that won't be used for the longest time
+        let farthestUseIndex = -1;
+        let replaceIndex = 0;
+        
+        for (let i = 0; i < frameCount; i++) {
+            let currentPage = frames[i];
+            
+            // Find the next use of this page in the reference string
+            let nextUse = -1;
+            for (let j = currentIndex + 1; j < referenceString.length; j++) {
+                if (referenceString[j] === currentPage) {
+                    nextUse = j;
+                    break;
+                }
+            }
+            
+            // If this page won't be used again, replace it immediately
+            if (nextUse === -1) {
+                replaceIndex = i;
+                break;
+            }
+            
+            // If this page will be used later than the current farthest, update
+            if (nextUse > farthestUseIndex) {
+                farthestUseIndex = nextUse;
+                replaceIndex = i;
+            }
+        }
+        
+        // Replace the selected page
+        frames[replaceIndex] = page;
+    }
+    
+    return pageFaults;
+}</code></pre>
+        </div>
+        
+        <div class="advantages">
+            <h3>Advantages:</h3>
+            <ul>
+                <li>Guarantees minimum possible page faults</li>
+                <li>Serves as a theoretical benchmark to evaluate other algorithms</li>
+                <li>Does not suffer from Belady's Anomaly</li>
+            </ul>
+        </div>
+        
+        <div class="disadvantages">
+            <h3>Disadvantages:</h3>
+            <ul>
+                <li>Cannot be implemented in real systems (requires knowledge of future)</li>
+                <li>Used only for theoretical comparison</li>
+                <li>Computationally expensive to simulate</li>
+            </ul>
+        </div>
+        
+        <div class="complexity">
+            <p><strong>Time Complexity:</strong> O(n²) where n is the length of reference string</p>
+            <p><strong>Space Complexity:</strong> O(n) where n is the number of frames</p>
+        </div>
+        
+        <div class="note">
+            <p><strong>Note:</strong> The Optimal algorithm is also known as Belady's Optimal algorithm or OPT.</p>
+        </div>
+    </div>
+    
+    <div class="algorithm">
+        <h2>5. Random Algorithm</h2>
+        
+        <div class="theory">
+            <p><strong>Theory:</strong> The Random algorithm simply selects a random page to replace when a page fault occurs and all frames are full. It makes no assumptions about future page references.</p>
+            
+            <ul>
+                <li>Requires no history tracking or complex data structures</li>
+                <li>Randomly selects a victim frame when replacement is needed</li>
+                <li>Extremely simple to implement</li>
+            </ul>
+        </div>
+        
+        <div class="code">
+            <pre><code>function Random(referenceString, frameCount) {
+    // Initialize variables
+    let frames = new Array(frameCount).fill(-1);  // -1 indicates empty frame
+    let pageFaults = 0;
+    
+    // Process each page in the reference string
+    for (let page of referenceString) {
+        // Check if page is already in memory (page hit)
+        if (frames.includes(page)) {
+            // Page hit - no action needed
+            continue;
+        }
+        
+        // Page fault occurred
+        pageFaults++;
+        
+        // If we have empty frames, use them
+        let emptyIndex = frames.indexOf(-1);
+        if (emptyIndex !== -1) {
+            frames[emptyIndex] = page;
+            continue;
+        }
+        
+        // Choose a random frame to replace
+        let randomIndex = Math.floor(Math.random() * frameCount);
+        frames[randomIndex] = page;
+    }
+    
+    return pageFaults;
+}</code></pre>
+        </div>
+        
+        <div class="advantages">
+            <h3>Advantages:</h3>
+            <ul>
+                <li>Extremely simple to implement</li>
+                <li>No overhead for tracking page history</li>
+                <li>Can avoid worst-case scenarios that affect deterministic algorithms</li>
+                <li>Sometimes performs surprisingly well</li>
+            </ul>
+        </div>
+        
+        <div class="disadvantages">
+            <h3>Disadvantages:</h3>
+            <ul>
+                <li>Unpredictable performance</li>
+                <li>No theoretical performance guarantees</li>
+                <li>May replace important pages</li>
+                <li>Typically performs worse than more intelligent algorithms</li>
+            </ul>
+        </div>
+        
+        <div class="complexity">
+            <p><strong>Time Complexity:</strong> O(1) for page replacement</p>
+            <p><strong>Space Complexity:</strong> O(n) where n is the number of frames</p>
+        </div>
+    </div>
+    
+    <div class="algorithm">
+        <h2>Performance Comparison</h2>
+        
+        <table>
+            <tr>
+                <th>Algorithm</th>
+                <th>Time Complexity</th>
+                <th>Space Complexity</th>
+                <th>Belady's Anomaly</th>
+                <th>Implementation Difficulty</th>
+                <th>Performance</th>
+            </tr>
+            <tr>
+                <td>FIFO</td>
+                <td>O(1)</td>
+                <td>O(n)</td>
+                <td>Yes</td>
+                <td>Easy</td>
+                <td>Fair</td>
+            </tr>
+            <tr>
+                <td>LRU</td>
+                <td>O(1) with optimized structures</td>
+                <td>O(n)</td>
+                <td>No</td>
+                <td>Moderate</td>
+                <td>Good</td>
+            </tr>
+            <tr>
+                <td>LFU</td>
+                <td>O(n) or O(log n) with heap</td>
+                <td>O(m)</td>
+                <td>No</td>
+                <td>Moderate to Hard</td>
+                <td>Good</td>
+            </tr>
+            <tr>
+                <td>Optimal</td>
+                <td>O(n²)</td>
+                <td>O(n)</td>
+                <td>No</td>
+                <td>N/A (Theoretical)</td>
+                <td>Best</td>
+            </tr>
+            <tr>
+                <td>Random</td>
+                <td>O(1)</td>
+                <td>O(n)</td>
+                <td>Probabilistic</td>
+                <td>Very Easy</td>
+                <td>Unpredictable</td>
+            </tr>
+        </table>
+        
+        <div class="note">
+            <p><strong>Note:</strong> In the above table, 'n' refers to the number of frames and 'm' refers to the number of unique pages in the reference string.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Optional JavaScript to add interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Example reference string and frame count for demonstration
+            const referenceString = [7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 2, 0, 1, 7, 0, 1];
+            const frameCount = 3;
+            
+            console.log("For educational purposes, here are the page fault counts:");
+            
+            function FIFO(referenceString, frameCount) {
+                let frames = new Array(frameCount).fill(-1);
+                let queue = [];
+                let pageFaults = 0;
+                
+                for (let page of referenceString) {
+                    if (frames.includes(page)) continue;
+                    
+                    pageFaults++;
+                    
+                    if (queue.length < frameCount) {
+                        frames[queue.length] = page;
+                        queue.push(page);
+                    } else {
+                        let oldestPage = queue.shift();
+                        let index = frames.indexOf(oldestPage);
+                        frames[index] = page;
+                        queue.push(page);
+                    }
+                }
+                
+                return pageFaults;
+            }
+            
+            // Implementation of LRU, LFU, Optimal, and Random would go here in a real application
+            
+            console.log("Page Faults with FIFO: " + FIFO(referenceString, frameCount));
+        });
+    </script>
+    <style>
+        /* This will center the button vertically and horizontally */
+       
+
+        button {
+            padding: 15px 30px;
+           cursor: pointer;
+            transition: 0.3s;
+            font-size: 25px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+        
+        
+        button:hover {
+            background-color: #45a049; /* Darken on hover */
+        }
+    </style>
+    <button onclick="window.location.href='pagereplacement_working.html';">simulation</button></body>
+</html>

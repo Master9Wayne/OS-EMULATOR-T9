@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deadlock Detection & Avoidance</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1e1e2f;
+      color: #f0f0f0;
+      line-height: 1.6;
+      padding: 0 20px;
+    }
+    header {
+      background: #00ffe7;
+      color: #000;
+      padding: 20px 0;
+      text-align: center;
+    }
+    h1, h2 {
+      margin-bottom: 10px;
+    }
+    section {
+      padding: 30px 0;
+      max-width: 900px;
+      margin: auto;
+    }
+    .card {
+      background-color: #2e2e3f;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    code {
+      background-color: #000;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #00ffe7;
+    }
+    pre {
+      background-color: #121212;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    a.button {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #00ffe7;
+      color: #000;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 0 10px;
+      }
+      h1 {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Deadlock Detection & Avoidance</h1>
+    <p>Understand, Visualize, and Prevent Deadlocks in Operating Systems</p>
+  </header>
+
+  <section>
+    <div class="card">
+      <h2>🔒 What is a Deadlock?</h2>
+      <p>A <strong>deadlock</strong> is a situation in an operating system where a set of processes are blocked because each process is holding a resource and waiting for another resource acquired by another process.</p>
+    </div>
+
+    <div class="card">
+      <h2>🛠 Deadlock Detection</h2>
+      <p>This strategy allows the system to enter a deadlock state, detect it, and then recover. It involves tracking resource allocation and identifying cycles in the resource allocation graph.</p>
+      <p><strong>Example:</strong></p>
+      <pre>
+Processes: P0, P1
+Resources: R0, R1
+
+P0 holds R0 and requests R1
+P1 holds R1 and requests R0
+
+→ Deadlock detected (circular wait)
+      </pre>
+      <a class="button" href="deadlock_detection.html">Try Detection Tool</a>
+    </div>
+
+    <div class="card">
+      <h2>🧠 Deadlock Avoidance</h2>
+      <p>Involves careful resource allocation to ensure the system never enters an unsafe state. Banker's Algorithm is a classic example of this approach.</p>
+      <p><strong>Banker's Algorithm Example:</strong></p>
+      <pre>
+Max:     P0 (7,5,3)
+Alloc:   P0 (0,1,0)
+Need:    P0 (7,4,3)
+Available: (3,3,2)
+
+→ System checks if resources can be safely allocated without causing a deadlock.
+      </pre>
+      <a class="button" href="deadlock_avoidance.html">Try Banker's Algorithm Tool</a>
+    </div>
+
+    <div class="card">
+      <h2>📚 Key Concepts</h2>
+      <ul>
+        <li><strong>Mutual Exclusion</strong> - Only one process can use a resource at a time.</li>
+        <li><strong>Hold and Wait</strong> - Processes holding resources can request additional ones.</li>
+        <li><strong>No Preemption</strong> - Resources cannot be forcibly taken.</li>
+        <li><strong>Circular Wait</strong> - A set of processes form a circular chain of resource requests.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>📖 Further Reading</h2>
+      <ul>
+        <li><a href="https://www.geeksforgeeks.org/deadlock-in-operating-system/" target="_blank" style="color: #00ffe7;">Deadlocks - GeeksForGeeks</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Deadlock" target="_blank" style="color: #00ffe7;">Deadlock - Wikipedia</a></li>
+        <li><a href="https://www.javatpoint.com/os-deadlock" target="_blank" style="color: #00ffe7;">Deadlock Tutorial - JavaTpoint</a></li>
+      </ul>
+    </div>
+  </section>
+
+</body>
+</html>

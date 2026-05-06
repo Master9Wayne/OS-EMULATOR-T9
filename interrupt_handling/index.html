@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interrupt Handling Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Interrupt Handling Demo</h1>
+            <p class="intro">Visualize how interrupts are handled in an operating system</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="processType">Process Type</label>
+                <select id="processType">
+                    <option value="cpu">CPU-Bound</option>
+                    <option value="io">I/O-Bound</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="processCount">Number of Processes</label>
+                <input type="number" id="processCount" min="1" max="5" value="1">
+            </div>
+            <button id="addProcess">Add Process</button>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="interruptType">Interrupt Type</label>
+                <select id="interruptType">
+                    <option value="hardware">Hardware</option>
+                    <option value="software">Software</option>
+                    <option value="timer">Timer</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="priority">Priority</label>
+                <select id="priority">
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="interruptCount">Number of Interrupts</label>
+                <input type="number" id="interruptCount" min="1" max="10" value="1">
+            </div>
+            <button id="addInterrupt">Add Interrupt</button>
+        </div>
+
+        <div class="queue-management">
+            <h3>Process Queue</h3>
+            <div id="processQueuePreview" class="queue-preview-list"></div>
+            
+            <h3>Interrupt Queue</h3>
+            <div id="interruptQueuePreview" class="queue-preview-list"></div>
+
+            <div class="queue-actions">
+                <button id="startDemo">Start Demo</button>
+                <button id="resetDemo">Reset</button>
+            </div>
+        </div>
+
+        <div class="demo-area">
+            <div class="cpu-section">
+                <h3>CPU Status</h3>
+                <div class="cpu-container">
+                    <div id="currentProcess" class="process-box">Idle</div>
+                    <div id="interruptStatus" class="interrupt-status">No Interrupt</div>
+                </div>
+            </div>
+
+            <div class="interrupt-service">
+                <h3>Interrupt Service Process</h3>
+                <div class="service-steps">
+                    <div class="step" id="step1">
+                        <span class="step-number">1</span>
+                        <span class="step-text">Interrupt Occurs</span>
+                    </div>
+                    <div class="step" id="step2">
+                        <span class="step-number">2</span>
+                        <span class="step-text">Save Context</span>
+                    </div>
+                    <div class="step" id="step3">
+                        <span class="step-number">3</span>
+                        <span class="step-text">Identify Interrupt</span>
+                    </div>
+                    <div class="step" id="step4">
+                        <span class="step-number">4</span>
+                        <span class="step-text">Execute ISR</span>
+                    </div>
+                    <div class="step" id="step5">
+                        <span class="step-number">5</span>
+                        <span class="step-text">Restore Context</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline">
+                <h3>Timeline</h3>
+                <div class="timeline-container">
+                    <div id="timelineContent" class="timeline-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h2>Interrupt Information</h2>
+            <div class="info-content" id="interruptInfo">
+                <p>Select an interrupt to view its details</p>
+            </div>
+        </div>
+    </div>
+    <script src="interrupt.js"></script>
+</body>
+</html> 

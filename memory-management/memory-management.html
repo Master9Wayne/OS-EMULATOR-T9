@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OS Memory Allocation Emulator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    h3 {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    
+    .controls {
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 500;
+    }
+    
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.25rem;
+      box-sizing: border-box;
+    }
+    
+    .radio-group {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .radio-label {
+      display: flex;
+      align-items: center;
+    }
+    
+    .radio-label input {
+      margin-right: 0.5rem;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      padding-top: 0.5rem;
+    }
+    
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      font-weight: 500;
+    }
+    
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    
+    .btn-blue {
+      background-color: #3b82f6;
+      color: white;
+    }
+    
+    .btn-blue:hover:not(:disabled) {
+      background-color: #2563eb;
+    }
+    
+    .btn-purple {
+      background-color: #8b5cf6;
+      color: white;
+    }
+    
+    .btn-purple:hover:not(:disabled) {
+      background-color: #7c3aed;
+    }
+    
+    .btn-red {
+      background-color: #ef4444;
+      color: white;
+    }
+    
+    .btn-red:hover:not(:disabled) {
+      background-color: #dc2626;
+    }
+    
+    .btn-small {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+      background-color: #fee2e2;
+      color: #dc2626;
+    }
+    
+    .btn-small:hover {
+      background-color: #fecaca;
+    }
+    
+    .status-message {
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 0.25rem;
+    }
+    
+    .status-success {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .status-error {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+    
+    .memory-visualization {
+      margin-bottom: 1.5rem;
+    }
+    
+    .memory-container {
+      height: 4rem;
+      width: 100%;
+      background-color: #e5e7eb;
+      display: flex;
+      border-radius: 0.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .memory-block {
+      position: absolute;
+      height: 100%;
+      transition: all 0.5s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.75rem;
+    }
+    
+    .memory-free {
+      background-color: #9ca3af;
+    }
+    
+    .memory-allocated {
+      background-color: #3b82f6;
+    }
+    
+    .memory-pulsing {
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.7;
+      }
+    }
+    
+    .memory-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    
+    .process-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+    
+    @media (min-width: 768px) {
+      .process-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .process-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+    
+    .process-card {
+      padding: 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.25rem;
+      background-color: white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .process-name {
+      font-weight: 500;
+    }
+    
+    .process-size {
+      margin-left: 0.5rem;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    
+    .explanation {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: #eff6ff;
+      border-radius: 0.25rem;
+      border: 1px solid #dbeafe;
+    }
+    
+    .explanation ul {
+      list-style-type: disc;
+      padding-left: 1.25rem;
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+    
+    .truncate {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OS Memory Allocation Emulator</h1>
+    
+    <!-- Controls -->
+    <div class="controls">
+      <div class="control-group">
+        <div>
+          <label>Allocation Technique:</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="technique" value="mvt" checked>
+              <span>MVT (Variable-size partitions)</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="technique" value="mft">
+              <span>MFT (Fixed-size partitions)</span>
+            </label>
+          </div>
+        </div>
+        
+        <div>
+          <label>Total Memory Size:</label>
+          <input type="number" id="totalMemory" value="1000" min="100" max="10000">
+        </div>
+        
+        <div id="partitionSizeContainer" style="display: none;">
+          <label>Partition Size:</label>
+          <input type="number" id="blockSize" value="200" min="50" max="500">
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <div>
+          <label>Process Name:</label>
+          <input type="text" id="processName" placeholder="P1, P2, etc.">
+        </div>
+        
+        <div>
+          <label>Process Size:</label>
+          <input type="number" id="processSize" value="150" min="1" max="1000">
+        </div>
+        
+        <div class="button-group">
+          <button id="allocateBtn" class="btn-blue">Allocate Memory</button>
+          <button id="compactBtn" class="btn-purple">Compact Memory</button>
+          <button id="resetBtn" class="btn-red">Reset</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Status message -->
+    <div id="message" class="status-message" style="display: none;"></div>
+    
+    <!-- Memory Visualization -->
+    <div class="memory-visualization">
+      <h2>Memory Map</h2>
+      <div id="memoryContainer" class="memory-container"></div>
+      <div class="memory-labels">
+        <span>0</span>
+        <span id="memorySize">1000</span>
+      </div>
+    </div>
+    
+    <!-- Active Processes -->
+    <div>
+      <h2>Active Processes</h2>
+      <div id="processContainer">
+        <p class="text-gray-500">No active processes</p>
+      </div>
+    </div>
+    
+    <!-- Explanation -->
+    <div class="explanation">
+      <h3>How it works:</h3>
+      <ul>
+        <li><strong>MVT (Multiprogramming with Variable-size Tasks):</strong> Allocates exactly the memory needed for each process. Can lead to external fragmentation.</li>
+        <li><strong>MFT (Multiprogramming with Fixed-size Tasks):</strong> Divides memory into fixed-size partitions. Can lead to internal fragmentation.</li>
+        <li><strong>External Fragmentation:</strong> Enough total memory exists, but it's fragmented into small pieces.</li>
+        <li><strong>Internal Fragmentation:</strong> Wasted space within allocated blocks (in MFT).</li>
+        <li><strong>Compaction:</strong> Rearranges memory to combine all free space together (only in MVT).</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // State variables
+      let technique = 'mvt';
+      let totalMemory = 1000;
+      let blockSize = 200;
+      let processSize = 150;
+      let processName = '';
+      let processes = [];
+      let memoryBlocks = [];
+      let allocating = false;
+      let nextId = 1;
+      
+      // DOM elements
+      const techniqueRadios = document.querySelectorAll('input[name="technique"]');
+      const totalMemoryInput = document.getElementById('totalMemory');
+      const blockSizeInput = document.getElementById('blockSize');
+      const processNameInput = document.getElementById('processName');
+      const processSizeInput = document.getElementById('processSize');
+      const allocateBtn = document.getElementById('allocateBtn');
+      const compactBtn = document.getElementById('compactBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const messageEl = document.getElementById('message');
+      const memorySizeEl = document.getElementById('memorySize');
+      const memoryContainer = document.getElementById('memoryContainer');
+      const processContainer = document.getElementById('processContainer');
+      const partitionSizeContainer = document.getElementById('partitionSizeContainer');
+      
+      // Initialize
+      resetMemory();
+      
+      // Event listeners
+      techniqueRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+          technique = this.value;
+          if (technique === 'mft') {
+            partitionSizeContainer.style.display = 'block';
+          } else {
+            partitionSizeContainer.style.display = 'none';
+          }
+          resetMemory();
+        });
+      });
+      
+      totalMemoryInput.addEventListener('change', function() {
+        totalMemory = parseInt(this.value) || 1000;
+        memorySizeEl.textContent = totalMemory;
+        resetMemory();
+      });
+      
+      blockSizeInput.addEventListener('change', function() {
+        blockSize = parseInt(this.value) || 200;
+        resetMemory();
+      });
+      
+      processNameInput.addEventListener('input', function() {
+        processName = this.value;
+      });
+      
+      processSizeInput.addEventListener('input', function() {
+        processSize = parseInt(this.value) || 150;
+      });
+      
+      allocateBtn.addEventListener('click', allocateMemory);
+      compactBtn.addEventListener('click', compactMemory);
+      resetBtn.addEventListener('click', resetMemory);
+      
+      // Functions
+      function resetMemory() {
+        processes = [];
+        updateProcessDisplay();
+        
+        if (technique === 'mvt') {
+          // For MVT, we start with one large free block
+          memoryBlocks = [{ id: 'free-1', type: 'free', size: totalMemory, start: 0 }];
+        } else {
+          // For MFT, we divide memory into fixed-size partitions
+          const numBlocks = Math.floor(totalMemory / blockSize);
+          memoryBlocks = [];
+          for (let i = 0; i < numBlocks; i++) {
+            memoryBlocks.push({
+              id: `partition-${i}`,
+              type: 'free',
+              size: blockSize,
+              start: i * blockSize,
+              processId: null
+            });
+          }
+        }
+        
+        updateMemoryDisplay();
+        setMessage('', false);
+        updateCompactButton();
+      }
+      
+      function allocateMemory() {
+        if (!processName.trim()) {
+          setMessage('Please enter a process name', true);
+          return;
+        }
+        
+        const size = parseInt(processSize);
+        if (isNaN(size) || size <= 0) {
+          setMessage('Please enter a valid process size', true);
+          return;
+        }
+        
+        const processId = nextId++;
+        const newProcess = {
+          id: processId,
+          name: processName,
+          size: size
+        };
+        
+        setAllocating(true);
+        setMessage(`Allocating ${size} units for process ${processName}...`, false);
+        
+        // Simulate allocation delay for animation
+        setTimeout(() => {
+          if (technique === 'mvt') {
+            allocateMVT(newProcess);
+          } else {
+            allocateMFT(newProcess);
+          }
+          setAllocating(false);
+          processNameInput.value = '';
+          processName = '';
+        }, 500);
+      }
+      
+      function allocateMVT(process) {
+        // First-fit algorithm for MVT
+        const blocks = [...memoryBlocks];
+        let allocated = false;
+        
+        for (let i = 0; i < blocks.length; i++) {
+          const block = blocks[i];
+          if (block.type === 'free' && block.size >= process.size) {
+            // Found a suitable block
+            const remainingSize = block.size - process.size;
+            const newBlocks = [...blocks];
+            
+            // Replace the free block with an allocated block
+            newBlocks[i] = {
+              id: `process-${process.id}`,
+              type: 'allocated',
+              size: process.size,
+              start: block.start,
+              processId: process.id
+            };
+            
+            // If there's space left, create a new free block
+            if (remainingSize > 0) {
+              newBlocks.splice(i + 1, 0, {
+                id: `free-${Date.now()}`,
+                type: 'free',
+                size: remainingSize,
+                start: block.start + process.size
+              });
+            }
+            
+            memoryBlocks = newBlocks;
+            processes.push(process);
+            updateMemoryDisplay();
+            updateProcessDisplay();
+            setMessage(`Process ${process.name} allocated successfully`, false);
+            allocated = true;
+            break;
+          }
+        }
+        
+        if (!allocated) {
+          handleMemoryFragmentation(process);
+        }
+        
+        updateCompactButton();
+      }
+      
+      function allocateMFT(process) {
+        // For MFT, find the first free partition
+        const blocks = [...memoryBlocks];
+        let allocated = false;
+        
+        if (process.size > blockSize) {
+          setMessage(`Process ${process.name} size (${process.size}) exceeds partition size (${blockSize})`, true);
+          return;
+        }
+        
+        for (let i = 0; i < blocks.length; i++) {
+          const block = blocks[i];
+          if (block.type === 'free') {
+            // Found a free partition
+            blocks[i] = {
+              ...block,
+              type: 'allocated',
+              processId: process.id,
+              internalFragmentation: blockSize - process.size
+            };
+            
+            memoryBlocks = blocks;
+            processes.push(process);
+            updateMemoryDisplay();
+            updateProcessDisplay();
+            setMessage(`Process ${process.name} allocated successfully (Internal Fragmentation: ${blockSize - process.size} units)`, false);
+            allocated = true;
+            break;
+          }
+        }
+        
+        if (!allocated) {
+          setMessage(`Cannot allocate process ${process.name}: No free partitions available`, true);
+        }
+      }
+      
+      function handleMemoryFragmentation(process) {
+        // Check if total free memory is enough but fragmented
+        const totalFree = memoryBlocks
+          .filter(block => block.type === 'free')
+          .reduce((sum, block) => sum + block.size, 0);
+        
+        if (totalFree >= process.size) {
+          setMessage(`Cannot allocate process ${process.name}: External Fragmentation (${totalFree} units available but fragmented)`, true);
+        } else {
+          setMessage(`Cannot allocate process ${process.name}: Not enough memory (${totalFree} units free, ${process.size} required)`, true);
+        }
+      }
+      
+      function deallocateProcess(processId) {
+        setAllocating(true);
+        setMessage('Deallocating process...', false);
+        
+        setTimeout(() => {
+          if (technique === 'mvt') {
+            deallocateMVT(processId);
+          } else {
+            deallocateMFT(processId);
+          }
+          setAllocating(false);
+        }, 500);
+      }
+      
+      function deallocateMVT(processId) {
+        const processToRemove = processes.find(p => p.id === processId);
+        if (!processToRemove) return;
+        
+        // Find the block associated with this process
+        let blocks = [...memoryBlocks];
+        const blockIndex = blocks.findIndex(b => b.processId === processId);
+        
+        if (blockIndex !== -1) {
+          // Convert the allocated block to a free block
+          blocks[blockIndex] = {
+            ...blocks[blockIndex],
+            id: `free-${Date.now()}`,
+            type: 'free',
+            processId: null
+          };
+          
+          // Merge adjacent free blocks
+          blocks = mergeAdjacentFreeBlocks(blocks);
+          
+          memoryBlocks = blocks;
+          processes = processes.filter(p => p.id !== processId);
+          updateMemoryDisplay();
+          updateProcessDisplay();
+          setMessage(`Process ${processToRemove.name} deallocated successfully`, false);
+        }
+        
+        updateCompactButton();
+      }
+      
+      function deallocateMFT(processId) {
+        const processToRemove = processes.find(p => p.id === processId);
+        if (!processToRemove) return;
+        
+        const blocks = [...memoryBlocks];
+        const blockIndex = blocks.findIndex(b => b.processId === processId);
+        
+        if (blockIndex !== -1) {
+          // Mark the partition as free
+          blocks[blockIndex] = {
+            ...blocks[blockIndex],
+            type: 'free',
+            processId: null,
+            internalFragmentation: 0
+          };
+          
+          memoryBlocks = blocks;
+          processes = processes.filter(p => p.id !== processId);
+          updateMemoryDisplay();
+          updateProcessDisplay();
+          setMessage(`Process ${processToRemove.name} deallocated successfully`, false);
+        }
+      }
+      
+      function mergeAdjacentFreeBlocks(blocks) {
+        // Sort blocks by start position
+        blocks.sort((a, b) => a.start - b.start);
+        
+        let i = 0;
+        while (i < blocks.length - 1) {
+          if (blocks[i].type === 'free' && blocks[i + 1].type === 'free') {
+            // Merge adjacent free blocks
+            blocks[i] = {
+              id: `free-${Date.now()}-${i}`,
+              type: 'free',
+              size: blocks[i].size + blocks[i + 1].size,
+              start: blocks[i].start
+            };
+            // Remove the second block
+            blocks.splice(i + 1, 1);
+          } else {
+            i++;
+          }
+        }
+        
+        return blocks;
+      }
+      
+      function compactMemory() {
+        if (technique !== 'mvt') return;
+        
+        setAllocating(true);
+        setMessage('Compacting memory...', false);
+        
+        setTimeout(() => {
+          // Sort blocks by allocated/free
+          const allocatedBlocks = memoryBlocks.filter(block => block.type === 'allocated');
+          const totalAllocatedSize = allocatedBlocks.reduce((sum, block) => sum + block.size, 0);
+          
+          // Rearrange allocated blocks to be contiguous
+          let currentStart = 0;
+          const newBlocks = [];
+          
+          allocatedBlocks.forEach(block => {
+            newBlocks.push({
+              ...block,
+              start: currentStart
+            });
+            currentStart += block.size;
+          });
+          
+          // Add a single free block at the end if there's space
+          if (totalAllocatedSize < totalMemory) {
+            newBlocks.push({
+              id: `free-${Date.now()}`,
+              type: 'free',
+              size: totalMemory - totalAllocatedSize,
+              start: totalAllocatedSize
+            });
+          }
+          
+          memoryBlocks = newBlocks;
+          updateMemoryDisplay();
+          setMessage('Memory compacted successfully', false);
+          setAllocating(false);
+          updateCompactButton();
+        }, 1000);
+      }
+      
+      function getPercentage(size) {
+        return (size / totalMemory) * 100;
+      }
+      
+      function updateMemoryDisplay() {
+        memoryContainer.innerHTML = '';
+        
+        memoryBlocks.forEach(block => {
+          const blockElement = document.createElement('div');
+          blockElement.className = `memory-block ${block.type === 'free' ? 'memory-free' : 'memory-allocated'}`;
+          if (allocating) {
+            blockElement.classList.add('memory-pulsing');
+          }
+          
+          blockElement.style.width = `${getPercentage(block.size)}%`;
+          blockElement.style.left = `${getPercentage(block.start)}%`;
+          
+          const contentDiv = document.createElement('div');
+          contentDiv.className = 'truncate';
+          contentDiv.style.padding = '4px';
+          
+          if (block.type === 'free') {
+            contentDiv.textContent = `Free (${block.size})`;
+          } else {
+            const process = processes.find(p => p.id === block.processId);
+            let text = `${process ? process.name : 'P?'} (${block.size})`;
+            if (block.internalFragmentation > 0) {
+              text += ` (IF: ${block.internalFragmentation})`;
+            }
+            contentDiv.textContent = text;
+          }
+          
+          blockElement.appendChild(contentDiv);
+          memoryContainer.appendChild(blockElement);
+        });
+      }
+      
+      function updateProcessDisplay() {
+        if (processes.length === 0) {
+          processContainer.innerHTML = '<p class="text-gray-500">No active processes</p>';
+          return;
+        }
+        
+        const grid = document.createElement('div');
+        grid.className = 'process-grid';
+        
+        processes.forEach(process => {
+          const card = document.createElement('div');
+          card.className = 'process-card';
+          
+          const infoDiv = document.createElement('div');
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'process-name';
+          nameSpan.textContent = process.name;
+          
+          const sizeSpan = document.createElement('span');
+          sizeSpan.className = 'process-size';
+          sizeSpan.textContent = `(${process.size} units)`;
+          
+          infoDiv.appendChild(nameSpan);
+          infoDiv.appendChild(sizeSpan);
+          
+          const terminateBtn = document.createElement('button');
+          terminateBtn.className = 'btn-small';
+          terminateBtn.textContent = 'Terminate';
+  
+          terminateBtn.addEventListener('click', () => deallocateProcess(process.id));
+          
+          card.appendChild(infoDiv);
+          card.appendChild(terminateBtn);
+          grid.appendChild(card);
+        });
+        
+        processContainer.innerHTML = '';
+        processContainer.appendChild(grid);
+      }
+      
+      function setMessage(text, isError) {
+        if (!text) {
+          messageEl.style.display = 'none';
+          return;
+        }
+        
+        messageEl.textContent = text;
+        messageEl.className = isError ? 'status-message status-error' : 'status-message status-success';
+        messageEl.style.display = 'block';
+      }
+      
+      function setAllocating(value) {
+        allocating = value;
+        allocateBtn.disabled = value;
+        compactBtn.disabled = value;
+        resetBtn.disabled = value;
+        
+        if (value) {
+          updateMemoryDisplay(); // To add the pulse animation
+        }
+      }
+      
+      function updateCompactButton() {
+        // Only enable compact button for MVT when there are multiple free blocks
+        const freeBlocks = memoryBlocks.filter(b => b.type === 'free');
+        compactBtn.disabled = technique !== 'mvt' || freeBlocks.length <= 1 || allocating;
+      }
+    });
+  </script>
+</body>
+</html>

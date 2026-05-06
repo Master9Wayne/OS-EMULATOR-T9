@@ -1,0 +1,181 @@
+:root {
+    --primary: #00f0ff;
+    --secondary: #0a84ff;
+    --background: #0a0a1f;
+    --surface: #1a1a3f;
+    --text: #ffffff;
+    --error: #ff3b30;
+    --success: #34c759;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  header {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  
+  .mode-selector {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  button {
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    border: none;
+    color: var(--text);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s, opacity 0.2s;
+    opacity: 0.7;
+  }
+  
+  button:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+  
+  button.active {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+  }
+  
+  .simulator {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .simulator.hidden {
+    display: none;
+  }
+  
+  .logical-space,
+  .mmu-section,
+  .physical-space {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+  }
+  
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--secondary);
+  }
+  
+  .memory-view {
+    height: 500px;
+    border: 2px solid var(--primary);
+    border-radius: 0.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .segment, .page {
+    position: absolute;
+    width: 100%;
+    background: rgba(0, 240, 255, 0.1);
+    border-left: 4px solid var(--primary);
+    transition: all 0.3s ease;
+  }
+  
+  .segment-label, .page-label {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .segment-table, .page-table {
+    margin-bottom: 2rem;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  th {
+    background: rgba(0, 240, 255, 0.1);
+    font-weight: 600;
+  }
+  
+  .address-converter {
+    background: rgba(0, 240, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+  }
+  
+  .converter-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .converter-inputs label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .converter-inputs input {
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--background);
+    border: 1px solid var(--primary);
+    border-radius: 0.25rem;
+    color: var(--text);
+  }
+  
+  .result {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(0, 240, 255, 0.05);
+    border-radius: 0.25rem;
+    font-family: monospace;
+  }

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thread Scheduling Simulation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Thread Scheduling Simulation</h1>
+            <p class="intro">Visualize the differences between User-Level Threads (ULT) and Kernel-Level Threads (KLT)</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="threadType">Thread Type:</label>
+                <select id="threadType">
+                    <option value="ult">User-Level Thread (ULT)</option>
+                    <option value="klt">Kernel-Level Thread (KLT)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="priority">Priority:</label>
+                <select id="priority">
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="completionTime">Completion Time:</label>
+                <select id="completionTime">
+                    <option value="3">3 runs</option>
+                    <option value="5">5 runs</option>
+                    <option value="7">7 runs</option>
+                    <option value="10">10 runs</option>
+                </select>
+            </div>
+            <button id="createThread" class="demo-button">Create Thread</button>
+            <button id="startSimulation" class="demo-button">Start Simulation</button>
+            <button id="resetSimulation" class="demo-button">Reset</button>
+        </div>
+
+        <div class="simulation-container">
+            <div class="threads-panel">
+                <h2>Threads</h2>
+                <div class="threads-list" id="threadsList">
+                    <!-- Threads will be added here -->
+                </div>
+            </div>
+            
+            <div class="cpu-panel">
+                <h2>CPU</h2>
+                <div class="cpu" id="cpu">
+                    <div class="cpu-core">
+                        <div class="current-thread" id="currentThread">Idle</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="queues-panel">
+            <h2>Thread States</h2>
+            <div class="queues-container">
+                <div class="queue">
+                    <h3>Ready Queue</h3>
+                    <div class="queue-content" id="readyQueue"></div>
+                </div>
+                <div class="queue">
+                    <h3>Running</h3>
+                    <div class="queue-content" id="runningQueue"></div>
+                </div>
+                <div class="queue">
+                    <h3>Blocked Queue</h3>
+                    <div class="queue-content" id="blockedQueue"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="gantt-panel">
+            <h2>Thread Execution Timeline</h2>
+            <div class="gantt-container">
+                <div class="gantt-header">
+                    <div class="time-marker">Time</div>
+                    <div class="time-slots" id="timeSlots"></div>
+                </div>
+                <div class="gantt-content" id="ganttContent"></div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h2>Thread Information</h2>
+            <div class="info-content" id="threadInfo">
+                <p>Select a thread to view its details</p>
+            </div>
+        </div>
+    </div>
+    <script src="thread.js"></script>
+</body>
+</html> 

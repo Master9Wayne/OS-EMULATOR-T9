@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contiguous Memory Allocation - Information</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0ff;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00ffff;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5),
+                         0 0 20px rgba(0, 255, 255, 0.3);
+            animation: glow 2s infinite alternate;
+        }
+
+        h2 {
+            color: #00ffff;
+            margin: 25px 0 15px;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+
+        .info-section {
+            background: rgba(128, 128, 128, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .info-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 255, 255, 0.2);
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .algorithm {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 3px solid #00ffff;
+        }
+
+        .simulator-btn {
+            display: block;
+            width: 250px;
+            margin: 40px auto;
+            background: linear-gradient(45deg, #00b4db, #0083b0);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1.1rem;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 180, 219, 0.2);
+        }
+
+        .simulator-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 180, 219, 0.4);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .comparison-table th, .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(0, 255, 255, 0.1);
+            color: #00ffff;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px rgba(0, 255, 255, 0.5); }
+            to { text-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.6); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .info-section {
+                padding: 15px;
+            }
+            
+            .comparison-table th, .comparison-table td {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contiguous Memory Allocation</h1>
+        
+        <div class="info-section">
+            <h2>What is Contiguous Memory Allocation?</h2>
+            <p>Contiguous memory allocation is a memory allocation technique in operating systems where each process is allocated a single continuous block of memory. The memory assigned to a process is in the form of a contiguous block, which means that the process is stored in adjacent memory locations.</p>
+        </div>
+        
+        <div class="info-section">
+            <h2>Key Characteristics</h2>
+            <ul>
+                <li><strong>Contiguity:</strong> All memory allocated to a process must be in a single, continuous block.</li>
+                <li><strong>External Fragmentation:</strong> Can lead to external fragmentation where free memory exists but is not contiguous.</li>
+                <li><strong>Address Translation:</strong> Simple address translation using base and limit registers.</li>
+            </ul>
+        </div>
+        
+        <div class="info-section">
+            <h2>Allocation Strategies</h2>
+            <p>There are several strategies for allocating memory blocks to processes:</p>
+            
+            <h3>First-Fit Algorithm</h3>
+            <div class="algorithm">
+                <p>Allocates the first free block that is large enough to accommodate the process.</p>
+                <ol>
+                    <li>Search the memory blocks from the beginning</li>
+                    <li>Allocate the first block that is large enough</li>
+                    <li>If the block is larger than needed, split it</li>
+                </ol>
+                <p><strong>Advantage:</strong> Fast allocation time</p>
+                <p><strong>Disadvantage:</strong> Can lead to fragmentation at the beginning of memory</p>
+            </div>
+            
+            <h3>Next-Fit Algorithm</h3>
+            <div class="algorithm">
+                <p>A variation of First-Fit that starts searching from the location of the last allocation.</p>
+                <ol>
+                    <li>Start searching from where the previous allocation ended</li>
+                    <li>Continue the search until finding a block large enough</li>
+                    <li>If the end of memory is reached, wrap around to the beginning</li>
+                </ol>
+                <p><strong>Advantage:</strong> Distributes allocations more evenly across memory</p>
+                <p><strong>Disadvantage:</strong> May be slower than First-Fit for some allocation patterns</p>
+            </div>
+            
+            <h3>Best-Fit Algorithm</h3>
+            <div class="algorithm">
+                <p>Allocates the smallest free block that is large enough to accommodate the process.</p>
+                <ol>
+                    <li>Search all memory blocks</li>
+                    <li>Find the smallest block that is large enough</li>
+                    <li>Allocate that block</li>
+                </ol>
+                <p><strong>Advantage:</strong> Minimizes wasted space</p>
+                <p><strong>Disadvantage:</strong> Slower allocation time, can create many small unusable fragments</p>
+            </div>
+            
+            <h3>Worst-Fit Algorithm</h3>
+            <div class="algorithm">
+                <p>Allocates the largest free block available.</p>
+                <ol>
+                    <li>Search all memory blocks</li>
+                    <li>Find the largest block</li>
+                    <li>Allocate that block</li>
+                </ol>
+                <p><strong>Advantage:</strong> Leaves larger leftover fragments that may be more useful</p>
+                <p><strong>Disadvantage:</strong> Quickly exhausts large blocks, slower allocation time</p>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2>Comparison of Allocation Strategies</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Speed</th>
+                        <th>Memory Utilization</th>
+                        <th>Fragmentation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>First-Fit</td>
+                        <td>Fast</td>
+                        <td>Good</td>
+                        <td>All lower ends of the memory at beginning</td>
+                    </tr>
+                    <tr>
+                        <td>Next-Fit</td>
+                        <td>Fast</td>
+                        <td>Good</td>
+                        <td>More evenly distributed</td>
+                    </tr>
+                    <tr>
+                        <td>Best-Fit</td>
+                        <td>Slow</td>
+                        <td>Better</td>
+                        <td>Many small fragments</td>
+                    </tr>
+                    <tr>
+                        <td>Worst-Fit</td>
+                        <td>Slow</td>
+                        <td>Poor (generally)</td>
+                        <td>Large fragments</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="info-section">
+            <h2>Challenges in Contiguous Memory Allocation</h2>
+            <ul>
+                <li><strong>External Fragmentation:</strong> Free memory space exists but is not contiguous, making it unusable for large processes.</li>
+                <li><strong>Compaction:</strong> The process of moving all processes to one end of memory to create a large contiguous free block.</li>
+                <li><strong>Memory Protection:</strong> Ensuring processes can only access their allocated memory.</li>
+            </ul>
+        </div>
+        
+        <a href="cma.html" class="simulator-btn">Try the Simulator</a>
+    </div>
+</body>
+</html>

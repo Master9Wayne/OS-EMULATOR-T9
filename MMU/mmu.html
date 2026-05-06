@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory Management Simulator</title>
+    <link rel="stylesheet" href="mmu.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Memory Management Unit</h1>
+        <div class="mode-selector">
+          <button id="segmentationMode" class="active">Segmentation</button>
+          <button id="pagingMode">Paging</button>
+        </div>
+      </header>
+
+      <div id="segmentationView" class="simulator">
+        <div class="logical-space">
+          <h2>Logical Address Space</h2>
+          <div id="logicalMemory" class="memory-view"></div>
+        </div>
+
+        <div class="mmu-section">
+          <h2>Memory Management Unit (MMU)</h2>
+          <div class="segment-table">
+            <h3>Segment Table</h3>
+            <table id="segmentTable">
+              <thead>
+                <tr>
+                  <th>Segment #</th>
+                  <th>Base</th>
+                  <th>Limit</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          
+          <div class="address-converter">
+            <h3>Address Translation <br>(Physical address generated is in Hexadecimal)</h3>
+            <div class="converter-inputs">
+              <div>
+                <label>Segment Number:</label>
+                <input type="number" id="segmentNumber" min="0" />
+              </div>
+              <div>
+                <label>Offset:</label>
+                <input type="number" id="offset" min="0" />
+              </div>
+            </div>
+            <button id="convert">Convert to Physical Address</button>
+            <div id="result" class="result"></div>
+          </div>
+        </div>
+
+        <div class="physical-space">
+          <h2>Physical Memory</h2>
+          <div id="physicalMemory" class="memory-view"></div>
+        </div>
+      </div>
+
+      <div id="pagingView" class="simulator hidden">
+        <div class="logical-space">
+          <h2>Virtual Address Space</h2>
+          <div id="virtualMemory" class="memory-view"></div>
+        </div>
+
+        <div class="mmu-section">
+          <h2>Memory Management Unit (MMU)</h2>
+          <div class="page-table">
+            <h3>Page Table</h3>
+            <table id="pageTable">
+              <thead>
+                <tr>
+                  <th>Page #</th>
+                  <th>Frame #</th>
+                  <th>Valid</th>
+                  <th>Referenced</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          
+          <div class="address-converter">
+            <h3>Address Translation <br>(Physical address generated is in 2-bit frame number and 3-bit offset) (Hexadecimal)</h3>
+            <div class="converter-inputs">
+              <div>
+                <label>Page Number:</label>
+                <input type="number" id="pageNumber" min="0" />
+              </div>
+              <div>
+                <label>Offset:</label>
+                <input type="number" id="pageOffset" min="0" />
+              </div>
+            </div>
+            <button id="convertPage">Convert to Physical Address</button>
+            <div id="pageResult" class="result"></div>
+          </div>
+        </div>
+
+        <div class="physical-space">
+          <h2>Physical Memory (Frames)</h2>
+          <div id="frameMemory" class="memory-view"></div>
+        </div>
+      </div>
+    </div>
+    <script src="mmu.js"></script>
+  </body>
+</html>

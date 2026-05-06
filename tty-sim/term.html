@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubuntu Web Terminal</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #300a24;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .terminal-header {
+            background-color: #54487A;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .terminal-header h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        .window-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+        
+        .close { background-color: #ff5f57; }
+        .minimize { background-color: #febc2e; }
+        .maximize { background-color: #28c840; }
+        
+        .terminal-container {
+            flex: 1;
+            padding: 10px 15px;
+            overflow-y: auto;
+        }
+        
+        #output {
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+        
+        .prompt-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        #prompt {
+            color: #4be37e;
+            margin-right: 8px;
+        }
+        
+        #command-input {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            outline: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-header">
+        <div class="window-buttons">
+            <div class="btn close"></div>
+            <div class="btn minimize"></div>
+            <div class="btn maximize"></div>
+        </div>
+        <h2>ubuntu@webterm: ~</h2>
+        <div></div>
+    </div>
+    <div class="terminal-container">
+        <div id="output">Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-88-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+0 updates can be applied immediately.
+
+Last login: Sat Apr 12 10:28:43 2025 from 192.168.1.105
+</div>
+        <div class="prompt-container">
+            <span id="prompt">ubuntu@webterm:~$</span>
+            <input type="text" id="command-input" autofocus>
+        </div>
+    </div>
+
+    <script>
+        const commandInput = document.getElementById('command-input');
+        const output = document.getElementById('output');
+        const prompt = document.getElementById('prompt');
+        
+        let currentDir = '~';
+        let history = [];
+        let historyIndex = -1;
+        let fileSystem = {
+            '~': {
+                type: 'dir',
+                contents: {
+                    'Documents': { type: 'dir', contents: {} },
+                    'Downloads': { type: 'dir', contents: {} },
+                    'Pictures': { type: 'dir', contents: {} },
+                    'hello.txt': { type: 'file', content: 'Hello, world!' },
+                    'readme.md': { type: 'file', content: '# Web Terminal\nThis is a simulated Ubuntu terminal in your browser.' }
+                }
+            }
+        };
+        
+        // Process commands
+        commandInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                
+                const cmd = commandInput.value.trim();
+                
+                // Add command to output
+                output.innerHTML += `${prompt.textContent} ${cmd}\n`;
+                
+                // Process command
+                if (cmd) {
+                    history.push(cmd);
+                    historyIndex = history.length;
+                    processCommand(cmd);
+                } else {
+                    // Just show a new prompt if empty
+                    output.innerHTML += '\n';
+                }
+                
+                // Clear input
+                commandInput.value = '';
+                
+                // Scroll to bottom
+                setTimeout(() => {
+                    window.scrollTo(0, document.body.scrollHeight);
+                }, 0);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    commandInput.value = history[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < history.length - 1) {
+                    historyIndex++;
+                    commandInput.value = history[historyIndex];
+                } else {
+                    historyIndex = history.length;
+                    commandInput.value = '';
+                }
+            }
+        });
+        
+        function processCommand(cmd) {
+            const parts = cmd.split(' ').filter(part => part.length > 0);
+            const command = parts[0];
+            const args = parts.slice(1);
+            
+            switch (command) {
+                case 'clear':
+                    output.innerHTML = '';
+                    break;
+                    
+                case 'ls':
+                    listFiles(args);
+                    break;
+                    
+                case 'cd':
+                    changeDirectory(args[0] || '~');
+                    break;
+                    
+                case 'pwd':
+                    output.innerHTML += resolveAbsolutePath(currentDir) + '\n';
+                    break;
+                    
+                case 'echo':
+                    output.innerHTML += args.join(' ') + '\n';
+                    break;
+                    
+                case 'cat':
+                    catFile(args[0]);
+                    break;
+                    
+                case 'mkdir':
+                    if (args[0]) {
+                        makeDirectory(args[0]);
+                    } else {
+                        output.innerHTML += 'mkdir: missing operand\n';
+                    }
+                    break;
+                    
+                case 'touch':
+                    if (args[0]) {
+                        touchFile(args[0]);
+                    } else {
+                        output.innerHTML += 'touch: missing file operand\n';
+                    }
+                    break;
+                    
+                case 'help':
+                    showHelp();
+                    break;
+
+                case 'date':
+                    const now = new Date();
+                    output.innerHTML += now.toString() + '\n';
+                    break;
+                    
+                case 'whoami':
+                    output.innerHTML += 'ubuntu\n';
+                    break;
+                    
+                case 'uname':
+                    if (args.includes('-a')) {
+                        output.innerHTML += 'Linux webterm 5.15.0-88-generic #98-Ubuntu SMP Sat Apr 12 10:28:43 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux\n';
+                    } else {
+                        output.innerHTML += 'Linux\n';
+                    }
+                    break;
+                
+                case '':
+                    // Empty command, just show a new line
+                    break;
+                    
+                default:
+                    output.innerHTML += `${command}: command not found\n`;
+            }
+        }
+        
+        function resolveAbsolutePath(path) {
+            if (path.startsWith('/')) {
+                return path;
+            } else if (path === '~') {
+                return '/home/ubuntu';
+            } else if (currentDir === '~') {
+                return `/home/ubuntu/${path}`;
+            } else if (currentDir.startsWith('~')) {
+                return `/home/ubuntu/${currentDir.slice(2)}/${path}`;
+            } else {
+                return `${currentDir}/${path}`;
+            }
+        }
+        
+        function getDirectoryFromPath(path) {
+            if (path === '~' || path === '/home/ubuntu') {
+                return fileSystem['~'];
+            }
+            
+            let currentNode = fileSystem['~'];
+            const parts = path.split('/').filter(p => p && p !== '~' && p !== 'home' && p !== 'ubuntu');
+            
+            for (const part of parts) {
+                if (currentNode.contents[part] && currentNode.contents[part].type === 'dir') {
+                    currentNode = currentNode.contents[part];
+                } else {
+                    return null;
+                }
+            }
+            
+            return currentNode;
+        }
+        
+        function listFiles(args) {
+            let options = {
+                showHidden: false,
+                longFormat: false
+            };
+            
+            let paths = [];
+            
+            for (const arg of args) {
+                if (arg.startsWith('-')) {
+                    if (arg.includes('a')) options.showHidden = true;
+                    if (arg.includes('l')) options.longFormat = true;
+                } else {
+                    paths.push(arg);
+                }
+            }
+            
+            if (paths.length === 0) {
+                paths.push(currentDir);
+            }
+            
+            for (const path of paths) {
+                const dir = getDirectoryFromPath(path === '.' ? currentDir : path);
+                
+                if (!dir) {
+                    output.innerHTML += `ls: cannot access '${path}': No such file or directory\n`;
+                    continue;
+                }
+                
+                if (paths.length > 1) {
+                    output.innerHTML += `${path}:\n`;
+                }
+                
+                const files = Object.keys(dir.contents);
+                
+                if (options.longFormat) {
+                    output.innerHTML += 'total ' + files.length + '\n';
+                    for (const file of files) {
+                        if (!options.showHidden && file.startsWith('.')) continue;
+                        const item = dir.contents[file];
+                        const type = item.type === 'dir' ? 'd' : '-';
+                        output.innerHTML += `${type}rwxr-xr-x 1 ubuntu ubuntu ${item.type === 'file' ? item.content.length : 4096} Apr 12 10:28 ${file}${item.type === 'dir' ? '/' : ''}\n`;
+                    }
+                } else {
+                    const filteredFiles = options.showHidden ? files : files.filter(f => !f.startsWith('.'));
+                    output.innerHTML += filteredFiles.map(f => {
+                        const isDir = dir.contents[f].type === 'dir';
+                        return isDir ? `\x1b[1;34m${f}/\x1b[0m` : f;
+                    }).join('  ') + '\n';
+                }
+            }
+        }
+        
+        function changeDirectory(path) {
+            if (!path || path === '~' || path === '/home/ubuntu') {
+                currentDir = '~';
+                prompt.textContent = 'ubuntu@webterm:~$';
+                return;
+            }
+            
+            let targetPath = path;
+            if (path === '..') {
+                if (currentDir === '~') {
+                    return;
+                }
+                const parts = currentDir.split('/');
+                parts.pop();
+                targetPath = parts.join('/') || '~';
+            } else if (path === '.') {
+                return;
+            } else if (!path.startsWith('/') && !path.startsWith('~')) {
+                targetPath = currentDir === '~' ? `~/${path}` : `${currentDir}/${path}`;
+            }
+            
+            const dir = getDirectoryFromPath(targetPath);
+            if (dir && dir.type === 'dir') {
+                currentDir = targetPath;
+                const displayPath = currentDir === '~' ? '~' : currentDir.startsWith('~/') ? currentDir : currentDir;
+                prompt.textContent = `ubuntu@webterm:${displayPath}$`;
+            } else {
+                output.innerHTML += `cd: ${path}: No such file or directory\n`;
+            }
+        }
+        
+        function catFile(path) {
+            if (!path) {
+                output.innerHTML += 'cat: missing operand\n';
+                return;
+            }
+            
+            const parts = path.split('/');
+            const fileName = parts.pop();
+            const dirPath = parts.length > 0 ? parts.join('/') : currentDir;
+            
+            const dir = getDirectoryFromPath(dirPath);
+            if (!dir) {
+                output.innerHTML += `cat: ${path}: No such file or directory\n`;
+                return;
+            }
+            
+            const file = dir.contents[fileName];
+            if (!file) {
+                output.innerHTML += `cat: ${path}: No such file or directory\n`;
+            } else if (file.type === 'dir') {
+                output.innerHTML += `cat: ${path}: Is a directory\n`;
+            } else {
+                output.innerHTML += file.content + '\n';
+            }
+        }
+        
+        function makeDirectory(path) {
+            const parts = path.split('/');
+            const dirName = parts.pop();
+            const parentPath = parts.length > 0 ? parts.join('/') : currentDir;
+            
+            const parentDir = getDirectoryFromPath(parentPath);
+            if (!parentDir) {
+                output.innerHTML += `mkdir: cannot create directory '${path}': No such file or directory\n`;
+                return;
+            }
+            
+            if (parentDir.contents[dirName]) {
+                output.innerHTML += `mkdir: cannot create directory '${dirName}': File exists\n`;
+                return;
+            }
+            
+            parentDir.contents[dirName] = { type: 'dir', contents: {} };
+        }
+        
+        function touchFile(path) {
+            const parts = path.split('/');
+            const fileName = parts.pop();
+            const dirPath = parts.length > 0 ? parts.join('/') : currentDir;
+            
+            const dir = getDirectoryFromPath(dirPath);
+            if (!dir) {
+                output.innerHTML += `touch: cannot touch '${path}': No such file or directory\n`;
+                return;
+            }
+            
+            if (!dir.contents[fileName]) {
+                dir.contents[fileName] = { type: 'file', content: '' };
+            }
+        }
+        
+        function showHelp() {
+            output.innerHTML += `Available commands:
+  ls        - List directory contents
+  cd        - Change directory
+  pwd       - Print working directory
+  echo      - Display a line of text
+  cat       - Concatenate files and print on the standard output
+  mkdir     - Make directories
+  touch     - Create empty files
+  clear     - Clear the terminal screen
+  date      - Print the system date and time
+  whoami    - Print effective userid
+  uname     - Print system information
+  help      - Show this help message
+
+This is a simulated terminal with limited functionality.
+\n`;
+        }
+        
+        // Focus the input when clicking anywhere in the terminal
+        document.querySelector('.terminal-container').addEventListener('click', function() {
+            commandInput.focus();
+        });
+        
+        // Initial focus
+        window.onload = function() {
+            commandInput.focus();
+        };
+    </script>
+</body>
+</html>

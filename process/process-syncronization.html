@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synchronization Problems Simulator</title>
+    <link rel="stylesheet" href="process-syncronization.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Classical Synchronization Problems Simulator</h1>
+            <p>Simulate and visualize three classic synchronization problems in operating systems</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="producer-consumer">Producer-Consumer</button>
+            <button class="tab" data-tab="readers-writers">Readers-Writers</button>
+            <button class="tab" data-tab="dining-philosophers">Dining Philosophers</button>
+        </div>
+
+        
+        <div id="producer-consumer" class="tab-content active">
+            <h2>Producer-Consumer Problem</h2>
+            <p>The Producer-Consumer problem involves two processes sharing a fixed-size buffer. Producers add data to the buffer while consumers remove data from it.</p>
+            
+            <div class="control-panel">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pc-buffer-size">Buffer Size:</label>
+                        <input type="number" id="pc-buffer-size" min="1" max="20" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="pc-producers">Number of Producers:</label>
+                        <input type="number" id="pc-producers" min="1" max="10" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="pc-consumers">Number of Consumers:</label>
+                        <input type="number" id="pc-consumers" min="1" max="10" value="2">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pc-prod-min-time">Producer Min Time (ms):</label>
+                        <input type="number" id="pc-prod-min-time" min="100" max="5000" value="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="pc-prod-max-time">Producer Max Time (ms):</label>
+                        <input type="number" id="pc-prod-max-time" min="100" max="5000" value="3000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pc-cons-min-time">Consumer Min Time (ms):</label>
+                        <input type="number" id="pc-cons-min-time" min="100" max="5000" value="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="pc-cons-max-time">Consumer Max Time (ms):</label>
+                        <input type="number" id="pc-cons-max-time" min="100" max="5000" value="3000">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="pc-start" class="btn-primary">Start Simulation</button>
+                    <button id="pc-stop" class="btn-danger" disabled>Stop Simulation</button>
+                    <button id="pc-reset" class="btn-secondary">Reset</button>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <h3>Buffer Status</h3>
+                <div id="pc-buffer" class="buffer"></div>
+                
+                <div class="agents-container">
+                    <div class="agent-group">
+                        <h3>Producers</h3>
+                        <div id="pc-producers-container" class="agents"></div>
+                    </div>
+                    <div class="agent-group">
+                        <h3>Consumers</h3>
+                        <div id="pc-consumers-container" class="agents"></div>
+                    </div>
+                </div>
+                
+                <h3>Activity Log</h3>
+                <div id="pc-log" class="log-container"></div>
+            </div>
+        </div>
+
+       
+        <div id="readers-writers" class="tab-content">
+            <h2>Readers-Writers Problem</h2>
+            <p>The Readers-Writers problem involves multiple processes wanting to access a shared resource - some for reading (which can be done simultaneously) and some for writing (which requires exclusive access).</p>
+            
+            <div class="control-panel">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rw-readers">Number of Readers:</label>
+                        <input type="number" id="rw-readers" min="1" max="10" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="rw-writers">Number of Writers:</label>
+                        <input type="number" id="rw-writers" min="1" max="10" value="2">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rw-read-min-time">Reading Min Time (ms):</label>
+                        <input type="number" id="rw-read-min-time" min="100" max="5000" value="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="rw-read-max-time">Reading Max Time (ms):</label>
+                        <input type="number" id="rw-read-max-time" min="100" max="5000" value="3000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rw-write-min-time">Writing Min Time (ms):</label>
+                        <input type="number" id="rw-write-min-time" min="100" max="5000" value="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="rw-write-max-time">Writing Max Time (ms):</label>
+                        <input type="number" id="rw-write-max-time" min="100" max="5000" value="3000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="rw-priority">Priority:</label>
+                    <select id="rw-priority">
+                        <option value="readers">Readers Priority</option>
+                        <option value="writers">Writers Priority</option>
+                        <option value="fair">Fair (FIFO)</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button id="rw-start" class="btn-primary">Start Simulation</button>
+                    <button id="rw-stop" class="btn-danger" disabled>Stop Simulation</button>
+                    <button id="rw-reset" class="btn-secondary">Reset</button>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <div class="rw-container">
+                    <div id="rw-resource" class="resource">
+                        <div class="resource-status">Not in use</div>
+                        <div class="resource-counter">Readers: 0</div>
+                    </div>
+                    
+                    <div class="agents-row">
+                        <div class="agent-group">
+                            <h3>Readers</h3>
+                            <div id="rw-readers-container" class="agents"></div>
+                        </div>
+                        <div class="agent-group">
+                            <h3>Writers</h3>
+                            <div id="rw-writers-container" class="agents"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>Activity Log</h3>
+                <div id="rw-log" class="log-container"></div>
+            </div>
+        </div>
+
+        
+        <div id="dining-philosophers" class="tab-content">
+            <h2>Dining Philosophers Problem</h2>
+            <p>The Dining Philosophers problem involves N philosophers sitting around a circular table. Each philosopher needs two forks to eat, but there are only N forks in total (one between each pair of philosophers).</p>
+            
+            <div class="control-panel">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dp-philosophers">Number of Philosophers:</label>
+                        <input type="number" id="dp-philosophers" min="2" max="10" value="5">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dp-think-min-time">Thinking Min Time (ms):</label>
+                        <input type="number" id="dp-think-min-time" min="100" max="5000" value="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="dp-think-max-time">Thinking Max Time (ms):</label>
+                        <input type="number" id="dp-think-max-time" min="100" max="5000" value="3000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dp-eat-min-time">Eating Min Time (ms):</label>
+                        <input type="number" id="dp-eat-min-time" min="100" max="5000" value="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="dp-eat-max-time">Eating Max Time (ms):</label>
+                        <input type="number" id="dp-eat-max-time" min="100" max="5000" value="3000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="dp-strategy">Strategy:</label>
+                    <select id="dp-strategy">
+                        <option value="arbitrator">Resource Hierarchy (Arbitrator)</option>
+                        <option value="asymmetric">Asymmetric Solution</option>
+                        <option value="chandy-misra">Chandy-Misra Solution</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button id="dp-start" class="btn-primary">Start Simulation</button>
+                    <button id="dp-stop" class="btn-danger" disabled>Stop Simulation</button>
+                    <button id="dp-reset" class="btn-secondary">Reset</button>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <div id="dp-table" class="dining-table">
+                    <div class="table-center"></div>
+                </div>
+                
+                <div class="philosophers-status">
+                    <h3>Philosophers Status</h3>
+                    <div id="dp-status-container" class="status-container"></div>
+                </div>
+                
+                <h3>Activity Log</h3>
+                <div id="dp-log" class="log-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="process-syncronization.js"></script>
+</body>
+</html>

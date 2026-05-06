@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Deadlock Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1e1e2f;
+      color: #f1f1f1;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+    h1 {
+      color: #00ffcc;
+      font-size: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"] {
+      width: 80%;
+      max-width: 300px;
+      padding: 8px;
+      background-color: #111;
+      border: 1px solid #777;
+      color: white;
+      text-align: center;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+
+    .tables {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin: 20px 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      background-color: #2d2d44;
+      border: 1px solid #444;
+      min-width: 300px;
+      overflow-x: auto;
+    }
+
+    th, td {
+      border: 1px solid #555;
+      padding: 10px 12px;
+      color: #fff;
+    }
+
+    input[type="number"] {
+      width: 50px;
+      padding: 5px;
+      background-color: #111;
+      border: 1px solid #777;
+      color: white;
+      text-align: center;
+      border-radius: 4px;
+    }
+
+    .button {
+      padding: 10px 20px;
+      background-color: #00ffcc;
+      color: #000;
+      border: none;
+      font-weight: bold;
+      margin-top: 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+
+    .button:hover {
+      background-color: #00c3a3;
+    }
+
+    .output {
+      margin-top: 20px;
+      font-size: 1.1em;
+      word-wrap: break-word;
+    }
+
+    .success {
+      color: #00ffcc;
+    }
+
+    .error {
+      color: #ff5e5e;
+    }
+
+    caption {
+      caption-side: top;
+      padding: 8px;
+      font-weight: bold;
+      color: #00ffcc;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 768px) {
+      table {
+        font-size: 0.9rem;
+      }
+      input[type="number"] {
+        width: 40px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.6rem;
+      }
+
+      .tables {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      table {
+        width: 95%;
+        overflow-x: auto;
+        display: block;
+      }
+
+      th, td {
+        padding: 6px;
+      }
+
+      input[type="number"] {
+        width: 36px;
+        padding: 3px;
+      }
+
+      .button {
+        width: 80%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Deadlock Detection</h1>
+
+  <div>
+    <label for="available">Available Resources (space-separated):</label>
+    <input type="text" id="available" placeholder="e.g. 3 2 2">
+  </div>
+
+  <div class="tables">
+    <table id="allocTable">
+      <caption>Allocated Resources</caption>
+      <thead>
+        <tr>
+          <th>Process</th>
+          <th>R0</th>
+          <th>R1</th>
+          <th>R2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>P0</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+        <tr><td>P1</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+        <tr><td>P2</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+        <tr><td>P3</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+        <tr><td>P4</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+      </tbody>
+    </table>
+
+    <table id="requestTable">
+      <caption>Requested Resources</caption>
+      <thead>
+        <tr>
+          <th>Process</th>
+          <th>R0</th>
+          <th>R1</th>
+          <th>R2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>P0</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+        <tr><td>P1</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+        <tr><td>P2</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+        <tr><td>P3</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+        <tr><td>P4</td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td><td><input type="number" min="0" value="0"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <button class="button" onclick="detectDeadlock()">Check for Deadlock</button>
+
+  <div class="output" id="output"></div>
+
+  <script>
+    function detectDeadlock() {
+      const output = document.getElementById("output");
+      output.innerHTML = "";
+
+      const available = document.getElementById("available").value.trim().split(/\s+/).map(Number);
+      const allocRows = document.querySelectorAll("#allocTable tbody tr");
+      const requestRows = document.querySelectorAll("#requestTable tbody tr");
+
+      const alloc = Array.from(allocRows, row =>
+        Array.from(row.querySelectorAll("input"), input => Number(input.value) || 0)
+      );
+      const request = Array.from(requestRows, row =>
+        Array.from(row.querySelectorAll("input"), input => Number(input.value) || 0)
+      );
+
+      const n = alloc.length;
+      const m = available.length;
+      const completed = Array(n).fill(false);
+      let done = 0;
+      let safeSequence = [];
+
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (let i = 0; i < n; i++) {
+          if (!completed[i]) {
+            let canProceed = true;
+            for (let j = 0; j < m; j++) {
+              if (request[i][j] > available[j]) {
+                canProceed = false;
+                break;
+              }
+            }
+            if (canProceed) {
+              for (let j = 0; j < m; j++) {
+                available[j] += alloc[i][j];
+              }
+              completed[i] = true;
+              safeSequence.push(`P${i}`);
+              changed = true;
+              done++;
+            }
+          }
+        }
+      }
+
+      if (done === n) {
+        output.innerHTML = `<div class="success">✅ No Deadlock Detected.<br>Safe Sequence: ${safeSequence.join(" → ")}</div>`;
+      } else {
+        const deadlocked = completed.map((c, i) => !c ? `P${i}` : null).filter(Boolean);
+        output.innerHTML = `<div class="error">❌ Deadlock Detected!<br>Deadlocked Processes: ${deadlocked.join(", ")}</div>`;
+      }
+    }
+  </script>
+
+</body>
+</html>

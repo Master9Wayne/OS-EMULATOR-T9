@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interrupt Handling Demo</title>
+    <link rel="stylesheet" href="interrupt.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Interrupt Handling Demo</h1>
+            <p class="intro">Visualize how interrupts are handled in an operating system</p>
+        </header>
+
+        <div class="demo-container">
+            <div class="controls">
+                <div class="control-group">
+                    <h3>Interrupt Type</h3>
+                    <select id="interruptType">
+                        <option value="keyboard">Keyboard Interrupt</option>
+                        <option value="timer">Timer Interrupt</option>
+                        <option value="disk">Disk I/O Interrupt</option>
+                        <option value="network">Network Interrupt</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <h3>Priority Level</h3>
+                    <select id="priorityLevel">
+                        <option value="high">High Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="low">Low Priority</option>
+                    </select>
+                </div>
+                <button id="startDemo" class="demo-button">Start Demo</button>
+                <button id="resetDemo" class="demo-button">Reset</button>
+            </div>
+
+            <div class="visualization">
+                <div class="cpu-container">
+                    <div class="cpu">
+                        <div class="cpu-label">CPU</div>
+                        <div class="process" id="currentProcess">Process A</div>
+                    </div>
+                    <div class="interrupt-queue">
+                        <div class="queue-label">Interrupt Queue</div>
+                        <div class="queue-items" id="interruptQueue"></div>
+                    </div>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="timeline-label">Timeline</div>
+                    <div class="timeline" id="timeline"></div>
+                </div>
+
+                <div class="status-container">
+                    <div class="status-label">Status</div>
+                    <div class="status" id="status">Ready</div>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>What's Happening?</h3>
+                <div class="steps" id="steps">
+                    <div class="step" data-step="1">
+                        <span class="step-number">1</span>
+                        <span class="step-text">Select an interrupt type and priority level</span>
+                    </div>
+                    <div class="step" data-step="2">
+                        <span class="step-number">2</span>
+                        <span class="step-text">Click Start Demo to see the interrupt handling process</span>
+                    </div>
+                    <div class="step" data-step="3">
+                        <span class="step-number">3</span>
+                        <span class="step-text">Watch how the CPU handles the interrupt</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-container">
+            <a href="index.html" class="animate-button">Back to Theory</a>
+        </div>
+    </div>
+
+    <script src="interrupt.js"></script>
+</body>
+</html> 

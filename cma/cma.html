@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Allocation Simulator</title>
+    <link rel="stylesheet" href="cma.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Contiguous Memory Allocation</h1>
+        
+        <div class="controls">
+            <!-- Remove the memory-setup div wrapper -->
+            <div class="block-setup">
+                <label for="blockCount">Number of Memory Blocks:</label>
+                <input type="number" id="blockCount" min="1" value="3">
+                <button onclick="initializeMemoryBlocks()">Set Blocks</button>
+                <div id="blockSizesContainer"></div>
+            </div>
+            
+            <div class="process-setup" style="display: none;">
+                <div class="input-group">
+                    <label for="processCount">Number of Processes:</label>
+                    <input type="number" id="processCount" min="1" value="3">
+                    <button onclick="generateProcessInputs()">Set Processes</button>
+                </div>
+                <div id="processSizesContainer"></div>
+            </div>
+        </div>
+
+        <button id="allocateButton" style="display: none;" onclick="allocateAllProcesses()">Allocate All Processes</button>
+
+        <div class="memory-visualization">
+            <div class="memory-block" id="memoryBlock"></div>
+        </div>
+
+        <div class="process-list" id="processList">
+            <h3>Non-allocated Processes</h3>
+        </div>
+    </div>
+    <!-- Add this right before the closing body tag -->
+    <div class="dialog-overlay"></div>
+    <div class="strategy-info-dialog">
+        <button class="close-dialog">&times;</button>
+        <h3></h3>
+        <p></p>
+    </div>
+    <script src="cma.js"></script>
+</body>
+</html>

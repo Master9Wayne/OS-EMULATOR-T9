@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banker's Algorithm Simulator</title>
+    <style type="text/css">
+      :root {
+        --primary: #3498db;
+        --primary-dark: #2980b9;
+        --secondary: #2ecc71;
+        --secondary-dark: #27ae60;
+        --warning: #e74c3c;
+        --dark: #34495e;
+        --light: #ecf0f1;
+        --border: #bdc3c7;
+        --text: #2c3e50;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text);
+        background-color: #f9f9f9;
+        line-height: 1.6;
+        padding-bottom: 40px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+      }
+
+      /* Header Styling */
+      .header {
+        background-color: var(--primary);
+        color: white;
+        padding: 20px 0;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
+      .header h1 {
+        text-align: center;
+        font-size: 2rem;
+        margin: 0;
+      }
+
+      /* Input Section */
+      .resource-input {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+
+      .resource-input-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .resource-group {
+        display: flex;
+        align-items: center;
+      }
+
+      .resource-group label {
+        margin-right: 10px;
+        font-weight: 500;
+      }
+
+      .resource-input input[type="text"] {
+        width: 60px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 1rem;
+        text-align: center;
+      }
+
+      /* Buttons */
+      .button-group {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+        white-space: nowrap;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background-color: var(--primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--primary-dark);
+      }
+
+      .btn-secondary {
+        background-color: var(--secondary);
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background-color: var(--secondary-dark);
+      }
+
+      .btn-danger {
+        background-color: var(--warning);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #c0392b;
+      }
+
+      .btn-dark {
+        background-color: var(--dark);
+        color: white;
+      }
+
+      .btn-dark:hover {
+        background-color: #2c3e50;
+      }
+
+      /* Tables Section */
+      .tables-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .table-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+
+      .table-card h2 {
+        text-align: center;
+        margin-bottom: 15px;
+        color: var(--dark);
+        font-size: 1.3rem;
+        border-bottom: 2px solid var(--light);
+        padding-bottom: 8px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th, td {
+        padding: 8px;
+        text-align: center;
+        border: 1px solid var(--border);
+      }
+
+      th {
+        background-color: var(--light);
+        font-weight: 600;
+      }
+
+      td input {
+        width: 40px;
+        padding: 5px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      /* Sequence and Results Section */
+      .sequence-container {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        text-align: center;
+      }
+
+      .sequence-inputs {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .sequence-inputs input {
+        width: 50px;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.9rem;
+        background-color: var(--light);
+      }
+
+      .results-container {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+
+      .results-header {
+        text-align: center;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+        color: var(--dark);
+      }
+
+      .results-content {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 15px;
+        background-color: var(--light);
+        border-radius: 4px;
+        line-height: 1.8;
+      }
+
+      .calc-step {
+        margin-bottom: 10px;
+      }
+
+      /* Footer */
+      .footer {
+        text-align: center;
+        padding: 20px 0;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 1.8rem;
+        }
+
+        .resource-input-container {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .button-group {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        button {
+          width: 100%;
+          max-width: 250px;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .tables-container {
+          grid-template-columns: 1fr;
+        }
+
+        .table-card {
+          overflow-x: auto;
+        }
+
+        table {
+          min-width: 280px;
+        }
+
+        th, td {
+          padding: 6px 4px;
+          font-size: 0.9rem;
+        }
+
+        .header h1 {
+          font-size: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="container">
+        <h1>Banker's Algorithm Simulator</h1>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- Resources Input Section -->
+      <div class="resource-input">
+        <div class="resource-input-container">
+          <div class="resource-group">
+            <label for="resourceA">Instances of A:</label>
+            <input type="text" id="resourceA" size="2" maxlength="2"/>
+          </div>
+          
+          <div class="resource-group">
+            <label for="resourceB">Instances of B:</label>
+            <input type="text" id="resourceB" size="2" maxlength="2"/>
+          </div>
+          
+          <div class="resource-group">
+            <label for="resourceC">Instances of C:</label>
+            <input type="text" id="resourceC" size="2" maxlength="2"/>
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button type="button" class="btn-secondary" onclick="sample()">Load Sample Data</button>
+          <button type="button" class="btn-primary" onclick="find_avai()">Find Available</button>
+          <button type="button" class="btn-primary" onclick="find_need()">Find Need</button>
+          <button type="button" class="btn-dark" onclick="find_sequence()">Find Process Sequence</button>
+          <button type="button" class="btn-danger" onclick="reset()">Reset</button>
+        </div>
+      </div>
+
+      <!-- Tables Container -->
+      <div class="tables-container">
+        <!-- Allocation Table -->
+        <div class="table-card">
+          <h2>Allocation Matrix</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Process</th>
+                <th>A</th>
+                <th>B</th>
+                <th>C</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P1</td>
+                <td><input id="a11" size="2" maxlength="2"/></td>
+                <td><input id="a12" size="2" maxlength="2"/></td>
+                <td><input id="a13" size="2" maxlength="2"/></td>
+              </tr>
+              <tr>
+                <td>P2</td>
+                <td><input id="a21" size="2" maxlength="2"/></td>
+                <td><input id="a22" size="2" maxlength="2"/></td>
+                <td><input id="a23" size="2" maxlength="2"/></td>
+              </tr>
+              <tr>
+                <td>P3</td>
+                <td><input id="a31" size="2" maxlength="2"/></td>
+                <td><input id="a32" size="2" maxlength="2"/></td>
+                <td><input id="a33" size="2" maxlength="2"/></td>
+              </tr>
+              <tr>
+                <td>P4</td>
+                <td><input id="a41" size="2" maxlength="2"/></td>
+                <td><input id="a42" size="2" maxlength="2"/></td>
+                <td><input id="a43" size="2" maxlength="2"/></td>
+              </tr>
+              <tr>
+                <td>P5</td>
+                <td><input id="a51" size="2" maxlength="2"/></td>
+                <td><input id="a52" size="2" maxlength="2"/></td>
+                <td><input id="a53" size="2" maxlength="2"/></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Max Table -->
+        <div class="table-card">
+          <h2>Max Matrix</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Process</th>
+                <th>A</th>
+                <th>B</th>
+                <th>C</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P1</td>
+                <td><input id="m11" size="2" maxlength="2"/></td>
+                <td><input id="m12" size="2" maxlength="2"/></td>
+                <td><input id="m13" size="2" maxlength="2"/></td>
+              </tr>
+              <tr>
+                <td>P2</td>
+                <td><input id="m21" size="2" maxlength="2"/></td>
+                <td><input id="m22" size="2" maxlength="2"/></td>
+                <td><input id="m23" size="2" maxlength="2"/></td>
+              </tr>
+              <tr>
+                <td>P3</td>
+                <td><input id="m31" size="2" maxlength="2"/></td>
+                <td><input id="m32" size="2" maxlength="2"/></td>
+                <td><input id="m33" size="2" maxlength="2"/></td>
+              </tr>
+              <tr>
+                <td>P4</td>
+                <td><input id="m41" size="2" maxlength="2"/></td>
+                <td><input id="m42" size="2" maxlength="2"/></td>
+                <td><input id="m43" size="2" maxlength="2"/></td>
+              </tr>
+              <tr>
+                <td>P5</td>
+                <td><input id="m51" size="2" maxlength="2"/></td>
+                <td><input id="m52" size="2" maxlength="2"/></td>
+                <td><input id="m53" size="2" maxlength="2"/></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Need Table -->
+        <div class="table-card">
+          <h2>Need Matrix</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Process</th>
+                <th>A</th>
+                <th>B</th>
+                <th>C</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P1</td>
+                <td><input id="n11" size="2" maxlength="2" readonly/></td>
+                <td><input id="n12" size="2" maxlength="2" readonly/></td>
+                <td><input id="n13" size="2" maxlength="2" readonly/></td>
+              </tr>
+              <tr>
+                <td>P2</td>
+                <td><input id="n21" size="2" maxlength="2" readonly/></td>
+                <td><input id="n22" size="2" maxlength="2" readonly/></td>
+                <td><input id="n23" size="2" maxlength="2" readonly/></td>
+              </tr>
+              <tr>
+                <td>P3</td>
+                <td><input id="n31" size="2" maxlength="2" readonly/></td>
+                <td><input id="n32" size="2" maxlength="2" readonly/></td>
+                <td><input id="n33" size="2" maxlength="2" readonly/></td>
+              </tr>
+              <tr>
+                <td>P4</td>
+                <td><input id="n41" size="2" maxlength="2" readonly/></td>
+                <td><input id="n42" size="2" maxlength="2" readonly/></td>
+                <td><input id="n43" size="2" maxlength="2" readonly/></td>
+              </tr>
+              <tr>
+                <td>P5</td>
+                <td><input id="n51" size="2" maxlength="2" readonly/></td>
+                <td><input id="n52" size="2" maxlength="2" readonly/></td>
+                <td><input id="n53" size="2" maxlength="2" readonly/></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Available Table -->
+        <div class="table-card">
+          <h2>Available Resources</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>A</th>
+                <th>B</th>
+                <th>C</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input id="av11" size="2" maxlength="2" readonly/></td>
+                <td><input id="av12" size="2" maxlength="2" readonly/></td>
+                <td><input id="av13" size="2" maxlength="2" readonly/></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Safe Sequence Section -->
+      <div class="sequence-container">
+        <h2>Safe Process Sequence</h2>
+        <div class="sequence-inputs">
+          <input id="p1" size="2" maxlength="2" readonly/>
+          <input id="p2" size="2" maxlength="2" readonly/>
+          <input id="p3" size="2" maxlength="2" readonly/>
+          <input id="p4" size="2" maxlength="2" readonly/>
+          <input id="p5" size="2" maxlength="2" readonly/>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-container">
+        <div class="results-header">Operations Results</div>
+        <div class="results-content">
+          <div id="calc0" class="calc-step"></div>
+          <div id="calc1" class="calc-step"></div>
+          <div id="calc2" class="calc-step"></div>
+          <div id="calc3" class="calc-step"></div>
+          <div id="calc4" class="calc-step"></div>
+          <div id="calc5" class="calc-step"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container">
+        <p>Banker's Algorithm Simulator - Operating Systems Concept</p>
+      </div>
+    </footer>
+
+    <script>
+        // Original script logic preserved
+        function validation(){
+          var a = document.getElementById('resourceA').value;
+          var b = document.getElementById('resourceB').value;
+          var c = document.getElementById('resourceC').value;
+          if( a=='' || a<0 || b=='' || b<0 || c=='' || c<0){
+            alert("Resource instance value can't be negative or blank");
+          }
+          for(var i=1; i<=5; i++){
+            for(var j=1; j<=3; j++){
+              if(document.getElementById('a'+i+j).value<0 || document.getElementById('a'+i+j).value==''){
+                alert("Allocation matrix elements can't be negative or blank");
+              }
+              if(document.getElementById('m'+i+j).value<0 || document.getElementById('m'+i+j).value==''){
+                alert("Max matrix elements can't be negative or blank");
+              }
+            }
+            document.getElementById('calc'+i).innerHTML = '';
+          }
+          document.getElementById('calc0').innerHTML = '';
+        }
+
+
+        function reset(){
+          document.getElementById('resourceA').value = '';
+          document.getElementById('resourceB').value = '';
+          document.getElementById('resourceC').value = '';
+          for(var i=1; i<=5; i++){
+            for(var j=1; j<=3; j++){
+              document.getElementById('a'+i+j).value='';
+              document.getElementById('m'+i+j).value='';
+              document.getElementById('n'+i+j).value='';
+            }
+            document.getElementById('p'+i).value = ''
+            document.getElementById('calc'+i).innerHTML = '';
+          }
+          document.getElementById('av11').value = '';
+          document.getElementById('av12').value = '';
+          document.getElementById('av13').value = '';
+          document.getElementById('calc0').innerHTML = '';
+        }
+
+        function sample(){
+          sam = [[0,1,0],
+                [2,0,0],
+                [3,0,2],
+                [2,1,1],
+                [0,0,2]];
+
+          max = [[7,5,3],
+                [3,2,2],
+                [9,0,2],
+                [2,2,2],
+                [4,3,3]];
+          for(var i=1; i<=5; i++){
+            for(var j=1; j<=3; j++){
+              document.getElementById('a'+i+j).value = sam[i-1][j-1];
+              document.getElementById('m'+i+j).value = max[i-1][j-1];
+            }
+          }
+          document.getElementById('resourceA').value = 10;
+          document.getElementById('resourceB').value = 5;
+          document.getElementById('resourceC').value = 7;
+          document.getElementById('calc0').innerHTML = '<div class="alert alert-success">Sample data loaded successfully!</div>';
+        }
+
+        function find_avai(){
+          var a = document.getElementById('resourceA').value;
+          var b = document.getElementById('resourceB').value;
+          var c = document.getElementById('resourceC').value;
+          var x = 0;
+          var y = 0;
+          var z = 0;
+          document.getElementById('calc1').innerHTML = '<strong>Calculating the Available Matrix:</strong><br>Available[n] = Total instances - (Allocation[0][n] + Allocation[1][n] + Allocation[2][n] + Allocation[3][n] + Allocation[4][n])<br>';
+          document.getElementById('calc1').innerHTML += 'Available[0] = '+a+' - ';
+          document.getElementById('calc2').innerHTML = 'Available[1] = '+b+' - ';
+          document.getElementById('calc3').innerHTML = 'Available[2] = '+c+' - ';
+          for(var i=1; i<=5; i++){
+              var x = x + parseInt(document.getElementById('a'+i+'1').value);
+              document.getElementById('calc1').innerHTML += parseInt(document.getElementById('a'+i+'1').value); if(i<5){document.getElementById('calc1').innerHTML += '+';}else{document.getElementById('calc1').innerHTML += ' = '}
+              var y = y + parseInt(document.getElementById('a'+i+'2').value);
+              document.getElementById('calc2').innerHTML += parseInt(document.getElementById('a'+i+'2').value); if(i<5){document.getElementById('calc2').innerHTML += '+';}else{document.getElementById('calc2').innerHTML += ' = '}
+              var z = z + parseInt(document.getElementById('a'+i+'3').value);
+              document.getElementById('calc3').innerHTML += parseInt(document.getElementById('a'+i+'3').value); if(i<5){document.getElementById('calc3').innerHTML += '+';}else{document.getElementById('calc3').innerHTML += ' = '}
+          }
+          document.getElementById('av11').value = a-x;
+          document.getElementById('calc1').innerHTML += a-x;
+          document.getElementById('av12').value = b-y;
+          document.getElementById('calc2').innerHTML += b-y;
+          document.getElementById('av13').value = c-z;
+          document.getElementById('calc3').innerHTML += c-z;
+          document.getElementById('calc4').innerHTML = '';
+          document.getElementById('calc5').innerHTML = '';
+          document.getElementById('calc0').innerHTML = '';
+          validation();
+        }
+
+        function find_need(){
+          document.getElementById('calc1').innerHTML = '<strong>Calculating the Need Matrix:</strong><br>Need[n][n] = Max[n][n] - Allocation[n][n]<br>';
+          document.getElementById('calc2').innerHTML = '';
+          document.getElementById('calc3').innerHTML = '';
+          document.getElementById('calc4').innerHTML = '';
+          document.getElementById('calc5').innerHTML = '';
+          document.getElementById('calc0').innerHTML = '';
+          for(var i=1; i<=5; i++){
+            for(var j=1; j<=3; j++){
+              document.getElementById('n'+i+j).value = parseInt(document.getElementById('m'+i+j).value) - parseInt(document.getElementById('a'+i+j).value);
+              document.getElementById('calc'+i).innerHTML += 'Need['+(i-1)+']'+'['+(j-1)+']'+' = '+document.getElementById('m'+i+j).value + ' - ' + document.getElementById('a'+i+j).value+' = '+document.getElementById('n'+i+j).value+'&nbsp;&nbsp;&nbsp;';
+            }
+          }
+        }
+
+
+        function find_sequence(){
+          var dp = 0;
+          var checker = 0;
+          var q = 1;
+          var k=1;
+          document.getElementById('calc0').innerHTML = '<strong>Calculating the Safe Process Sequence:</strong><br>';
+          for(var j=1; j<=5; j++){
+            x1 = parseInt(document.getElementById('av11').value);
+            x2 = parseInt(document.getElementById('av12').value);
+            x3 = parseInt(document.getElementById('av13').value);
+            document.getElementById('calc'+j).innerHTML = '<strong>Step '+j+':</strong> Available Matrix = ('+x1+', '+x2+', '+x3+')';
+            for(var i=k; i<=5; i++){
+              var ex1 = parseInt(document.getElementById('a'+i+'1').value);
+              var ex2 = parseInt(document.getElementById('a'+i+'2').value);
+              var ex3 = parseInt(document.getElementById('a'+i+'3').value);
+              if(ex1!= 0 || ex2!= 0 || ex3!= 0){
+                if(x1 >= parseInt(document.getElementById('n'+i+'1').value) && x2 >= parseInt(document.getElementById('n'+i+'2').value) && x3 >= parseInt(document.getElementById('n'+i+'3').value)){
+                  document.getElementById('p'+q).value = 'P'+i;
+                  document.getElementById('calc'+j).innerHTML += '<br>Need['+(i)+'] = ('+document.getElementById('n'+i+'1').value+', '+document.getElementById('n'+i+'2').value+', '
+                  +document.getElementById('n'+i+'3').value+') <= Available = ('+x1+', '+x2+', '+x3
+                  +') → Process P'+i+' is selected.<br>New Available = ('+document.getElementById('av11').value+', '+document.getElementById('av12').value+', '+document.getElementById('av13').value+') + ('+document.getElementById('a'+i+'1').value+', '+document.getElementById('a'+i+'2').value+', '
+                  +document.getElementById('a'+i+'3').value+') = ';
+                  document.getElementById('av11').value = parseInt(document.getElementById('av11').value) + parseInt(document.getElementById('a'+i+'1').value);
+                  document.getElementById('av12').value = parseInt(document.getElementById('av12').value) + parseInt(document.getElementById('a'+i+'2').value);
+                  document.getElementById('av13').value = parseInt(document.getElementById('av13').value) + parseInt(document.getElementById('a'+i+'3').value);
+                  document.getElementById('calc'+j).innerHTML += '('+document.getElementById('av11').value+', '+document.getElementById('av12').value+', '+document.getElementById('av13').value+')';
+                  document.getElementById('a'+i+'1').value = '0';
+                  document.getElementById('a'+i+'2').value = '0';
+                  document.getElementById('a'+i+'3').value = '0';
+                  k=i+1;
+                  if (k==6){
+                    k=1;
+                  }
+                  q = q + 1;
+                  checker = checker + 1;
+                  break;
+                }
+                else{
+                  dp = i;
+                }
+              }
+            }
+          }
+          if(checker == 0){
+            alert("Deadlock detected! The system is in an unsafe state.");
+            reset();
+          }
+        }
+    </script>
+  </body>
+</html>

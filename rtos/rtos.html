@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RTOS EDF Simulator</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary: #4ade80;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --light: #f3f4f6;
+      --dark: #1f2937;
+      --gray: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f8fafc; color: var(--dark); display: flex; flex-direction: column; min-height: 100vh; }
+    .navbar { background-color: var(--dark); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    .navbar h1 { font-size: 1.25rem; font-weight: 600; }
+    .badge { background: #3b82f6; color: white; font-size: 0.65rem; padding: 2px 7px; border-radius: 999px; font-weight: 600; margin-left: 8px; vertical-align: middle; }
+    main { display: grid; grid-template-columns: 310px 1fr; flex-grow: 1; }
+    .sidebar { background-color: var(--light); border-right: 1px solid #e5e7eb; padding: 1rem; overflow-y: auto; }
+    .sidebar h2 { font-size: 1rem; margin-bottom: 0.75rem; font-weight: 600; }
+    .task-form { margin-bottom: 1.25rem; }
+    .form-group { margin-bottom: 0.6rem; }
+    .form-group label { display: block; margin-bottom: 0.2rem; font-weight: 500; font-size: 0.8rem; }
+    .form-group input, .form-group select { width: 100%; padding: 0.4rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.8rem; }
+    button { cursor: pointer; padding: 0.45rem 1rem; border: none; border-radius: 0.25rem; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-primary:hover { background-color: var(--primary-dark); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-danger { background-color: var(--danger); color: white; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+    .stat-card { background-color: white; border-radius: 0.25rem; padding: 0.6rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .stat-card h3 { font-size: 0.7rem; color: var(--gray); margin-bottom: 0.2rem; }
+    .stat-card p { font-size: 1.1rem; font-weight: 600; }
+    .stat-card p.missed { color: var(--danger); }
+    .tasks-list { list-style: none; }
+    .task-item { background-color: white; border-radius: 0.25rem; padding: 0.6rem; margin-bottom: 0.4rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 3px solid transparent; transition: border-color 0.3s; }
+    .task-item.urgent { border-left-color: var(--warning); }
+    .task-item.missed { border-left-color: var(--danger); background-color: #fff5f5; }
+    .task-item.completed { opacity: 0.55; }
+    .task-item h3 { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.2rem; display: flex; justify-content: space-between; align-items: center; }
+    .task-item p { font-size: 0.72rem; color: var(--gray); display: flex; justify-content: space-between; }
+    .deadline-badge { font-size: 0.65rem; padding: 1px 6px; border-radius: 999px; font-weight: 600; }
+    .deadline-badge.ok { background: #dcfce7; color: #166534; }
+    .deadline-badge.urgent { background: #fef9c3; color: #854d0e; }
+    .deadline-badge.missed { background: #fee2e2; color: #991b1b; }
+    .deadline-badge.done { background: #e0e7ff; color: #3730a3; }
+    .visualization { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+    .time-display { background-color: white; padding: 0.75rem 1rem; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    .time-display h2 { font-size: 1.25rem; font-weight: 600; }
+    .time-controls { display: flex; gap: 0.5rem; }
+    .cpu-container { background-color: white; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 0.75rem 1rem; }
+    .cpu-container h2 { font-size: 1rem; margin-bottom: 0.75rem; font-weight: 600; }
+    .cpu-core { height: 2.75rem; background-color: var(--light); border-radius: 0.25rem; margin-bottom: 0.75rem; display: flex; overflow: hidden; position: relative; }
+    .cpu-label { position: absolute; left: 0.5rem; top: 50%; transform: translateY(-50%); font-weight: 600; font-size: 0.8rem; z-index: 2; }
+    .task-execution { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; font-size: 0.8rem; transition: width 0.3s ease; }
+    .gantt-chart { background-color: white; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 0.75rem 1rem; overflow-x: auto; }
+    .gantt-chart h2 { font-size: 1rem; margin-bottom: 0.75rem; font-weight: 600; }
+    .gantt-container { display: flex; flex-direction: column; gap: 0.4rem; }
+    .gantt-row { display: flex; height: 2rem; align-items: center; }
+    .gantt-label { width: 110px; font-size: 0.8rem; font-weight: 500; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gantt-timeline { flex-grow: 1; height: 100%; display: flex; background-color: var(--light); border-radius: 0.25rem; overflow: hidden; position: relative; }
+    .gantt-deadline-marker { position: absolute; top: 0; height: 100%; width: 2px; background: var(--danger); opacity: 0.7; z-index: 3; }
+    .gantt-task { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; font-weight: 500; position: absolute; }
+    .gantt-time-markers { display: flex; margin-left: 110px; margin-bottom: 0.2rem; }
+    .gantt-time-marker { flex: 1; text-align: center; font-size: 0.65rem; color: var(--gray); }
+    .memory-chart { background-color: white; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 0.75rem 1rem; }
+    .memory-chart h2 { font-size: 1rem; margin-bottom: 0.75rem; font-weight: 600; }
+    .memory-blocks { display: flex; gap: 0.2rem; height: 1.75rem; }
+    .memory-block { height: 100%; flex-grow: 1; border-radius: 0.2rem; background-color: var(--light); transition: background-color 0.3s ease; }
+    .edf-info { font-size: 0.72rem; color: var(--gray); margin-top: 0.5rem; font-style: italic; }
+    @media (max-width: 768px) { main { grid-template-columns: 1fr; } .sidebar { border-right: none; border-bottom: 1px solid #e5e7eb; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h1>RTOS Simulator <span class="badge">EDF</span></h1>
+    <div class="controls">
+      <button id="reset-btn" class="btn-danger">Reset</button>
+    </div>
+  </nav>
+  <main>
+    <section class="sidebar">
+      <h2>Add Task</h2>
+      <form id="task-form" class="task-form">
+        <div class="form-group">
+          <label for="task-name">Task Name</label>
+          <input type="text" id="task-name" placeholder="Enter task name" required>
+        </div>
+        <div class="form-group">
+          <label for="task-burst">Execution Time (ms)</label>
+          <input type="number" id="task-burst" min="100" max="5000" value="1000" required>
+        </div>
+        <div class="form-group">
+          <label for="task-deadline">Relative Deadline (ms)</label>
+          <input type="number" id="task-deadline" min="100" max="20000" value="3000" required>
+        </div>
+        <div class="form-group">
+          <label for="task-memory">Memory Required (KB)</label>
+          <input type="number" id="task-memory" min="10" max="1000" value="100" required>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%">Add Task</button>
+        <p class="edf-info">Tasks are scheduled by earliest absolute deadline first.</p>
+      </form>
+
+      <div class="stats">
+        <div class="stat-card">
+          <h3>CPU Utilization</h3>
+          <p id="cpu-util">0%</p>
+        </div>
+        <div class="stat-card">
+          <h3>Memory Usage</h3>
+          <p id="memory-usage">0/4096 KB</p>
+        </div>
+        <div class="stat-card">
+          <h3>Tasks Running</h3>
+          <p id="tasks-running">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Deadline Misses</h3>
+          <p id="deadline-misses" class="missed">0</p>
+        </div>
+      </div>
+
+      <h2>Task Queue</h2>
+      <ul id="tasks-list" class="tasks-list"></ul>
+    </section>
+
+    <section class="visualization">
+      <div class="time-display">
+        <h2>Time: <span id="system-time">0</span> ms</h2>
+        <div class="time-controls">
+          <button id="start-btn" class="btn-primary">Start</button>
+          <button id="pause-btn" class="btn-primary" disabled>Pause</button>
+        </div>
+      </div>
+
+      <div class="cpu-container">
+        <h2>CPU Cores</h2>
+        <div id="core-1" class="cpu-core"><span class="cpu-label">Core 1</span></div>
+        <div id="core-2" class="cpu-core"><span class="cpu-label">Core 2</span></div>
+      </div>
+
+      <div class="gantt-chart">
+        <h2>Task Scheduling — Gantt Chart</h2>
+        <div class="gantt-time-markers" id="gantt-time-markers"></div>
+        <div id="gantt-container" class="gantt-container"></div>
+      </div>
+
+      <div class="memory-chart">
+        <h2>Memory Utilization</h2>
+        <div id="memory-blocks" class="memory-blocks"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    class RTOSSimulator {
+      constructor() {
+        this.systemTime = 0;
+        this.running = false;
+        this.taskIdCounter = 1;
+        this.totalMemory = 4096;
+        this.usedMemory = 0;
+        this.tasks = [];
+        this.runningTasks = [null, null];
+        this.taskHistory = [];
+        this.timeScale = 5000;
+        this.deadlineMisses = 0;
+
+        this.timeDisplay = document.getElementById('system-time');
+        this.cpuUtil = document.getElementById('cpu-util');
+        this.memoryUsage = document.getElementById('memory-usage');
+        this.tasksRunning = document.getElementById('tasks-running');
+        this.deadlineMissesEl = document.getElementById('deadline-misses');
+        this.tasksList = document.getElementById('tasks-list');
+        this.memoryBlocks = document.getElementById('memory-blocks');
+        this.ganttContainer = document.getElementById('gantt-container');
+        this.ganttTimeMarkers = document.getElementById('gantt-time-markers');
+        this.core1 = document.getElementById('core-1');
+        this.core2 = document.getElementById('core-2');
+        this.startBtn = document.getElementById('start-btn');
+        this.pauseBtn = document.getElementById('pause-btn');
+        this.resetBtn = document.getElementById('reset-btn');
+        this.taskForm = document.getElementById('task-form');
+
+        this.initMemoryBlocks();
+        this.updateGanttTimeMarkers();
+        this.bindEvents();
+      }
+
+      initMemoryBlocks() {
+        for (let i = 0; i < 40; i++) {
+          const block = document.createElement('div');
+          block.className = 'memory-block';
+          this.memoryBlocks.appendChild(block);
+        }
+      }
+
+      updateGanttTimeMarkers() {
+        this.ganttTimeMarkers.innerHTML = '';
+        const count = 10;
+        const interval = this.timeScale / count;
+        for (let i = 0; i <= count; i++) {
+          const marker = document.createElement('div');
+          marker.className = 'gantt-time-marker';
+          marker.textContent = (i * interval) + 'ms';
+          this.ganttTimeMarkers.appendChild(marker);
+        }
+      }
+
+      bindEvents() {
+        this.startBtn.addEventListener('click', () => this.startSimulation());
+        this.pauseBtn.addEventListener('click', () => this.pauseSimulation());
+        this.resetBtn.addEventListener('click', () => this.resetSimulation());
+        this.taskForm.addEventListener('submit', (e) => this.handleTaskSubmit(e));
+      }
+
+      startSimulation() {
+        if (!this.running) {
+          this.running = true;
+          this.startBtn.disabled = true;
+          this.pauseBtn.disabled = false;
+          this.tick();
+        }
+      }
+
+      pauseSimulation() {
+        this.running = false;
+        this.startBtn.disabled = false;
+        this.pauseBtn.disabled = true;
+      }
+
+      resetSimulation() {
+        this.pauseSimulation();
+        this.systemTime = 0;
+        this.taskIdCounter = 1;
+        this.tasks = [];
+        this.runningTasks = [null, null];
+        this.taskHistory = [];
+        this.usedMemory = 0;
+        this.timeScale = 5000;
+        this.deadlineMisses = 0;
+        this.updateUI();
+        this.clearCores();
+        this.ganttContainer.innerHTML = '';
+        this.updateGanttTimeMarkers();
+        this.tasksList.innerHTML = '';
+        document.querySelectorAll('.memory-block').forEach(b => { b.style.backgroundColor = ''; });
+      }
+
+      handleTaskSubmit(e) {
+        e.preventDefault();
+        const nameInput = document.getElementById('task-name');
+        const burstInput = document.getElementById('task-burst');
+        const deadlineInput = document.getElementById('task-deadline');
+        const memoryInput = document.getElementById('task-memory');
+
+        const burstTime = parseInt(burstInput.value);
+        const relativeDeadline = parseInt(deadlineInput.value);
+        const absoluteDeadline = this.systemTime + relativeDeadline;
+
+        if (burstTime > relativeDeadline) {
+          alert(`Warning: Execution time (${burstTime}ms) exceeds deadline (${relativeDeadline}ms) — task cannot complete in time.`);
+        }
+
+        const task = {
+          id: this.taskIdCounter++,
+          name: nameInput.value,
+          burstTime,
+          remainingTime: burstTime,
+          relativeDeadline,
+          absoluteDeadline,
+          memoryRequired: parseInt(memoryInput.value),
+          state: 'waiting',
+          startTime: null,
+          completionTime: null,
+          deadlineMissed: false,
+          executionIntervals: [],
+          currentExecutionStart: null,
+          currentExecutionCore: null
+        };
+
+        if (this.usedMemory + task.memoryRequired <= this.totalMemory) {
+          this.tasks.push(task);
+          this.usedMemory += task.memoryRequired;
+          this.updateMemoryUI();
+          this.addTaskToList(task);
+          this.addTaskToGantt(task);
+
+          const maxTime = Math.max(this.systemTime + task.relativeDeadline, task.absoluteDeadline + 500);
+          if (maxTime > this.timeScale * 0.8) {
+            this.timeScale = Math.ceil(maxTime * 1.3 / 1000) * 1000;
+            this.updateGanttTimeMarkers();
+            this.refreshGanttChart();
+          }
+
+          nameInput.value = '';
+          burstInput.value = '1000';
+          deadlineInput.value = '3000';
+          memoryInput.value = '100';
+
+          if (this.running) this.scheduleTasks();
+        } else {
+          alert('Not enough memory to add this task!');
+        }
+      }
+
+      // EDF: sort waiting tasks by earliest absolute deadline
+      sortTasksByEDF(tasks) {
+        return tasks.slice().sort((a, b) => a.absoluteDeadline - b.absoluteDeadline);
+      }
+
+      addTaskToList(task) {
+        const li = document.createElement('li');
+        li.className = 'task-item';
+        li.id = `task-${task.id}`;
+        li.innerHTML = this.taskItemHTML(task);
+        this.tasksList.appendChild(li);
+      }
+
+      taskItemHTML(task) {
+        const timeLeft = task.absoluteDeadline - this.systemTime;
+        let badgeClass = 'ok', badgeText = `D: ${task.absoluteDeadline}ms`;
+        if (task.state === 'completed') { badgeClass = 'done'; badgeText = 'Done'; }
+        else if (task.deadlineMissed) { badgeClass = 'missed'; badgeText = 'Missed!'; }
+        else if (timeLeft < task.burstTime * 1.2) { badgeClass = 'urgent'; badgeText = `${timeLeft}ms left`; }
+        else { badgeText = `${timeLeft}ms left`; }
+
+        const stateLabel = task.state === 'running'
+          ? `<span style="color:var(--primary);font-size:0.72rem;font-weight:600">RUNNING</span>`
+          : task.state === 'completed'
+            ? `<span style="font-size:0.72rem;color:var(--gray)">DONE</span>`
+            : `<span style="font-size:0.72rem;color:var(--gray)">WAITING</span>`;
+
+        return `
+          <h3>
+            <span>${task.name}</span>
+            <span class="deadline-badge ${badgeClass}">${badgeText}</span>
+          </h3>
+          <p>
+            <span>Time: ${task.remainingTime}/${task.burstTime}ms</span>
+            ${stateLabel}
+          </p>
+        `;
+      }
+
+      addTaskToGantt(task) {
+        const row = document.createElement('div');
+        row.className = 'gantt-row';
+        row.id = `gantt-task-${task.id}`;
+        row.innerHTML = `
+          <div class="gantt-label" title="${task.name}">${task.name}</div>
+          <div class="gantt-timeline" id="gantt-timeline-${task.id}"></div>
+        `;
+        this.ganttContainer.appendChild(row);
+        this.drawDeadlineMarker(task);
+      }
+
+      drawDeadlineMarker(task) {
+        const timeline = document.getElementById(`gantt-timeline-${task.id}`);
+        if (!timeline) return;
+        const existing = timeline.querySelector('.gantt-deadline-marker');
+        if (existing) existing.remove();
+        const left = (task.absoluteDeadline / this.timeScale) * 100;
+        if (left <= 100) {
+          const marker = document.createElement('div');
+          marker.className = 'gantt-deadline-marker';
+          marker.style.left = `${left}%`;
+          marker.title = `Deadline: ${task.absoluteDeadline}ms`;
+          timeline.appendChild(marker);
+        }
+      }
+
+      refreshGanttChart() {
+        document.querySelectorAll('.gantt-timeline').forEach(tl => { tl.innerHTML = ''; });
+        this.tasks.forEach(task => {
+          task.executionIntervals.forEach(iv => this.drawGanttBlock(task, iv.core, iv.start, iv.end));
+          this.drawDeadlineMarker(task);
+        });
+      }
+
+      updateTaskInList(task) {
+        const li = document.getElementById(`task-${task.id}`);
+        if (!li) return;
+        li.innerHTML = this.taskItemHTML(task);
+        li.className = 'task-item';
+        if (task.deadlineMissed) li.classList.add('missed');
+        else if (task.state === 'completed') li.classList.add('completed');
+        else {
+          const timeLeft = task.absoluteDeadline - this.systemTime;
+          if (timeLeft < task.burstTime * 1.2) li.classList.add('urgent');
+        }
+        if (task.state === 'completed') this.tasksList.appendChild(li);
+      }
+
+      drawGanttBlock(task, coreIndex, timeStart, timeEnd) {
+        const timeline = document.getElementById(`gantt-timeline-${task.id}`);
+        if (!timeline) return;
+        const block = document.createElement('div');
+        block.className = 'gantt-task';
+        block.style.backgroundColor = coreIndex === 0 ? '#2563eb' : '#16a34a';
+        const left = (timeStart / this.timeScale) * 100;
+        const width = ((timeEnd - timeStart) / this.timeScale) * 100;
+        block.style.left = `${left}%`;
+        block.style.width = `${width}%`;
+        block.title = `${task.name} (Core ${coreIndex + 1}): ${timeStart}ms – ${timeEnd}ms`;
+        if (width > 4) block.textContent = `C${coreIndex + 1}`;
+        timeline.appendChild(block);
+      }
+
+      scheduleTasks() {
+        const waiting = this.sortTasksByEDF(this.tasks.filter(t => t.state === 'waiting'));
+
+        for (let i = 0; i < this.runningTasks.length; i++) {
+          if (this.runningTasks[i] === null && waiting.length > 0) {
+            const task = waiting.shift();
+            task.state = 'running';
+            if (task.startTime === null) task.startTime = this.systemTime;
+            task.currentExecutionStart = this.systemTime;
+            task.currentExecutionCore = i;
+            this.runningTasks[i] = task;
+            this.updateTaskInList(task);
+            this.updateCoreUI(i, task);
+          }
+        }
+        this.updateUI();
+      }
+
+      updateCoreUI(coreIndex, task) {
+        const core = coreIndex === 0 ? this.core1 : this.core2;
+        while (core.children.length > 1) core.removeChild(core.lastChild);
+        if (task) {
+          const block = document.createElement('div');
+          block.className = 'task-execution';
+          block.style.width = '100%';
+          const timeLeft = task.absoluteDeadline - this.systemTime;
+          const isUrgent = timeLeft < task.remainingTime * 1.5;
+          block.style.backgroundColor = isUrgent ? '#d97706' : (coreIndex === 0 ? '#2563eb' : '#16a34a');
+          const pct = Math.max(0, Math.round((task.remainingTime / task.burstTime) * 100));
+          block.textContent = `${task.name} — ${task.remainingTime}ms (D:${task.absoluteDeadline}ms)`;
+          core.appendChild(block);
+        }
+      }
+
+      clearCores() {
+        [this.core1, this.core2].forEach(core => {
+          while (core.children.length > 1) core.removeChild(core.lastChild);
+        });
+      }
+
+      updateMemoryUI() {
+        this.memoryUsage.textContent = `${this.usedMemory}/${this.totalMemory} KB`;
+        const blocks = document.querySelectorAll('.memory-block');
+        const fill = Math.floor((this.usedMemory / this.totalMemory) * blocks.length);
+        blocks.forEach((b, i) => { b.style.backgroundColor = i < fill ? '#2563eb' : ''; });
+      }
+
+      updateUI() {
+        this.timeDisplay.textContent = this.systemTime;
+        const runCount = this.runningTasks.filter(t => t !== null).length;
+        this.cpuUtil.textContent = `${Math.round((runCount / this.runningTasks.length) * 100)}%`;
+        this.tasksRunning.textContent = runCount;
+        this.deadlineMissesEl.textContent = this.deadlineMisses;
+        this.updateMemoryUI();
+
+        if (this.systemTime > this.timeScale * 0.8) {
+          this.timeScale = Math.ceil(this.systemTime * 1.5 / 1000) * 1000;
+          this.updateGanttTimeMarkers();
+          this.refreshGanttChart();
+        }
+      }
+
+      tick() {
+        if (!this.running) return;
+        this.systemTime += 100;
+
+        for (let i = 0; i < this.runningTasks.length; i++) {
+          const task = this.runningTasks[i];
+          if (!task) continue;
+
+          task.remainingTime -= 100;
+
+          // Check deadline miss (while still running or waiting)
+          if (!task.deadlineMissed && this.systemTime > task.absoluteDeadline) {
+            task.deadlineMissed = true;
+            this.deadlineMisses++;
+          }
+
+          if (task.remainingTime <= 0) {
+            task.state = 'completed';
+            task.completionTime = this.systemTime;
+            task.executionIntervals.push({ core: task.currentExecutionCore, start: task.currentExecutionStart, end: this.systemTime });
+            this.drawGanttBlock(task, task.currentExecutionCore, task.currentExecutionStart, this.systemTime);
+            this.drawDeadlineMarker(task);
+            this.usedMemory = Math.max(0, this.usedMemory - task.memoryRequired);
+            this.updateTaskInList(task);
+            this.runningTasks[i] = null;
+            this.updateCoreUI(i, null);
+            this.taskHistory.push({ ...task, turnaroundTime: task.completionTime - task.startTime });
+          } else {
+            this.updateCoreUI(i, task);
+            this.updateTaskInList(task);
+          }
+        }
+
+        // Check deadline misses on waiting tasks too
+        this.tasks.filter(t => t.state === 'waiting' && !t.deadlineMissed).forEach(t => {
+          if (this.systemTime > t.absoluteDeadline) {
+            t.deadlineMissed = true;
+            this.deadlineMisses++;
+            this.updateTaskInList(t);
+          }
+        });
+
+        this.scheduleTasks();
+        this.updateUI();
+        setTimeout(() => this.tick(), 100);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.rtosSimulator = new RTOSSimulator();
+
+      const sampleTasks = [
+        { name: 'System Monitor', burstTime: 2000, deadline: 4000, memory: 200 },
+        { name: 'User Interface',  burstTime: 1500, deadline: 5000, memory: 300 },
+        { name: 'Data Logger',     burstTime: 1000, deadline: 2500, memory: 150 }
+      ];
+
+      setTimeout(() => {
+        sampleTasks.forEach(t => {
+          document.getElementById('task-name').value = t.name;
+          document.getElementById('task-burst').value = t.burstTime;
+          document.getElementById('task-deadline').value = t.deadline;
+          document.getElementById('task-memory').value = t.memory;
+          document.getElementById('task-form').dispatchEvent(new Event('submit'));
+        });
+      }, 300);
+    });
+  </script>
+</body>
+</html>
