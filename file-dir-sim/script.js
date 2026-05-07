@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Theme Toggle
     const themeSwitch = document.getElementById('theme-switch');
     
-    // Check for saved theme preference or use preferred color scheme
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-theme');
@@ -32,12 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.getAttribute('data-tab');
-            
-            // Remove active class from all buttons and contents
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Add active class to current button and content
             button.classList.add('active');
             document.getElementById(`${tabId}-tab`).classList.add('active');
         });
@@ -50,46 +45,48 @@ document.addEventListener('DOMContentLoaded', function() {
         notification.className = 'notification';
         notification.classList.add(type);
         notification.style.display = 'flex';
-        
-        // Auto hide after 3 seconds
         setTimeout(() => {
             notification.style.display = 'none';
         }, 3000);
     }
     
-    // Close notification on click
     document.querySelectorAll('.notification-close').forEach(button => {
         button.addEventListener('click', () => {
             button.parentElement.style.display = 'none';
         });
     });
     
-    // Confirmation Dialog
+    // ==================== FIXED Confirmation Dialog ====================
+    // FIX: Use named handler references so we can remove them before re-adding.
+    // The original code used cloneNode() to "reset" dialogConfirm, but after the
+    // first clone the outer `dialogConfirm` variable pointed to the removed node,
+    // so every subsequent call tried to clone a detached element. The cancel button
+    // was never cloned at all, so its listeners stacked up indefinitely.
     const confirmationDialog = document.getElementById('confirmation-dialog');
     const dialogTitle = document.getElementById('dialog-title');
     const dialogMessage = document.getElementById('dialog-message');
     const dialogCancel = document.getElementById('dialog-cancel');
     const dialogConfirm = document.getElementById('dialog-confirm');
-    
+
     function showConfirmDialog(title, message, confirmCallback) {
-        dialogTitle.textContent = title;
-        dialogMessage.textContent = message;
-        confirmationDialog.classList.add('open');
-        
-        // Remove previous event listeners
-        const newDialogConfirm = dialogConfirm.cloneNode(true);
-        dialogConfirm.parentNode.replaceChild(newDialogConfirm, dialogConfirm);
-        
-        // Add new event listener
-        newDialogConfirm.addEventListener('click', () => {
-            confirmCallback();
-            confirmationDialog.classList.remove('open');
-        });
-        
-        dialogCancel.addEventListener('click', () => {
-            confirmationDialog.classList.remove('open');
-        });
+    dialogTitle.textContent = title;
+    dialogMessage.textContent = message;
+    confirmationDialog.classList.add('open');
+
+    function onConfirm() {
+        confirmationDialog.classList.remove('open');
+        dialogCancel.removeEventListener('click', onCancel);
+        confirmCallback();
     }
+
+    function onCancel() {
+        confirmationDialog.classList.remove('open');
+        dialogConfirm.removeEventListener('click', onConfirm);
+    }
+
+    dialogConfirm.addEventListener('click', onConfirm, { once: true });
+    dialogCancel.addEventListener('click', onCancel, { once: true });
+}
     
     // Load data from localStorage
     let singleFiles = JSON.parse(localStorage.getItem('singleFiles')) || [];
@@ -126,7 +123,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 singleDisplay.appendChild(fileItem);
             });
             
-            // Add event listeners to delete buttons
             document.querySelectorAll('#single-display .file-delete').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const fileName = e.target.getAttribute('data-file');
@@ -147,17 +143,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     singleAddBtn.addEventListener('click', () => {
         const fileName = singleInput.value.trim();
-        
         if (!fileName) {
             showNotification('single-notification', 'Please enter a file name', 'error');
             return;
         }
-        
         if (singleFiles.includes(fileName)) {
             showNotification('single-notification', 'A file with this name already exists', 'error');
             return;
         }
-        
         singleFiles.push(fileName);
         localStorage.setItem('singleFiles', JSON.stringify(singleFiles));
         singleInput.value = '';
@@ -167,17 +160,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     singleDeleteBtn.addEventListener('click', () => {
         const fileName = singleInput.value.trim();
-        
         if (!fileName) {
             showNotification('single-notification', 'Please enter a file name to delete', 'error');
             return;
         }
-        
         if (!singleFiles.includes(fileName)) {
             showNotification('single-notification', 'File not found', 'error');
             return;
         }
-        
         showConfirmDialog(
             'Delete File',
             `Are you sure you want to delete "${fileName}"?`,
@@ -191,7 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
         );
     });
     
-    // Initialize single-level directory
     updateSingleDisplay();
     
     // ==================== Hashed Directory ====================
@@ -251,12 +240,10 @@ document.addEventListener('DOMContentLoaded', function() {
             hashedDisplay.appendChild(bucket);
         }
         
-        // Add event listeners to delete buttons
         document.querySelectorAll('.bucket-file-delete').forEach(button => {
             button.addEventListener('click', (e) => {
                 const fileName = e.target.getAttribute('data-file');
                 const bucketIndex = parseInt(e.target.getAttribute('data-bucket'));
-                
                 showConfirmDialog(
                     'Delete File',
                     `Are you sure you want to delete "${fileName}" from bucket ${bucketIndex}?`,
@@ -273,7 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     hashedInput.addEventListener('input', () => {
         const fileName = hashedInput.value.trim();
-        
         if (fileName) {
             const bucketIndex = hashFunction(fileName);
             hashValue.textContent = hashFunction(fileName);
@@ -286,19 +272,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     hashedAddBtn.addEventListener('click', () => {
         const fileName = hashedInput.value.trim();
-        
         if (!fileName) {
             showNotification('hashed-notification', 'Please enter a file name', 'error');
             return;
         }
-        
         const bucketIndex = hashFunction(fileName);
-        
         if (hashedFiles[bucketIndex].includes(fileName)) {
             showNotification('hashed-notification', 'A file with this name already exists in this bucket', 'error');
             return;
         }
-        
         hashedFiles[bucketIndex].push(fileName);
         localStorage.setItem('hashedFiles', JSON.stringify(hashedFiles));
         hashedInput.value = '';
@@ -309,19 +291,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     hashedDeleteBtn.addEventListener('click', () => {
         const fileName = hashedInput.value.trim();
-        
         if (!fileName) {
             showNotification('hashed-notification', 'Please enter a file name to delete', 'error');
             return;
         }
-        
         const bucketIndex = hashFunction(fileName);
-        
         if (!hashedFiles[bucketIndex].includes(fileName)) {
             showNotification('hashed-notification', 'File not found in the bucket', 'error');
             return;
         }
-        
         showConfirmDialog(
             'Delete File',
             `Are you sure you want to delete "${fileName}" from bucket ${bucketIndex}?`,
@@ -336,7 +314,6 @@ document.addEventListener('DOMContentLoaded', function() {
         );
     });
     
-    // Initialize hashed directory
     updateHashedDisplay();
     
     // ==================== Indexed Directory ====================
@@ -381,19 +358,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 tbody.appendChild(row);
             });
             
-            // Add event listeners to delete buttons
             document.querySelectorAll('.table-delete').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const fileIndex = parseInt(e.target.getAttribute('data-index'));
                     const file = indexedFiles.find(f => f !== null && f.index === fileIndex);
-                    
                     if (file) {
                         showConfirmDialog(
                             'Delete File',
                             `Are you sure you want to delete "${file.name}" with index ${file.index}?`,
                             () => {
-                                const fileIndex = indexedFiles.findIndex(f => f !== null && f.index === file.index);
-                                indexedFiles[fileIndex] = null;
+                                const idx = indexedFiles.findIndex(f => f !== null && f.index === file.index);
+                                indexedFiles[idx] = null;
                                 localStorage.setItem('indexedFiles', JSON.stringify(indexedFiles));
                                 updateIndexedDisplay(indexedSearch.value);
                                 showNotification('indexed-notification', `File "${file.name}" deleted successfully`, 'success');
@@ -407,23 +382,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     indexedAddBtn.addEventListener('click', () => {
         const fileName = indexedInput.value.trim();
-        
         if (!fileName) {
             showNotification('indexed-notification', 'Please enter a file name', 'error');
             return;
         }
-        
         if (indexedFiles.some(file => file !== null && file.name === fileName)) {
             showNotification('indexed-notification', 'A file with this name already exists', 'error');
             return;
         }
-        
-        // Find the next available index
         const maxIndex = indexedFiles.length > 0 
             ? Math.max(...indexedFiles.filter(f => f !== null).map(f => f.index), -1) 
             : -1;
         const newIndex = maxIndex + 1;
-        
         indexedFiles.push({ index: newIndex, name: fileName });
         localStorage.setItem('indexedFiles', JSON.stringify(indexedFiles));
         indexedInput.value = '';
@@ -433,19 +403,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     indexedDeleteBtn.addEventListener('click', () => {
         const fileName = indexedInput.value.trim();
-        
         if (!fileName) {
             showNotification('indexed-notification', 'Please enter a file name to delete', 'error');
             return;
         }
-        
         const file = indexedFiles.find(f => f !== null && f.name === fileName);
-        
         if (!file) {
             showNotification('indexed-notification', 'File not found', 'error');
             return;
         }
-        
         showConfirmDialog(
             'Delete File',
             `Are you sure you want to delete "${file.name}" with index ${file.index}?`,
@@ -464,7 +430,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateIndexedDisplay(indexedSearch.value);
     });
     
-    // Initialize indexed directory
     updateIndexedDisplay();
     
     // ==================== Hierarchical Directory ====================
@@ -493,33 +458,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function getOrCreateParent(path) {
         const components = path.split('/').filter(c => c);
-        if (components.length < 1) {
-            return null;
-        }
+        if (components.length < 1) return null;
         const parentComponents = components.slice(0, -1);
         const name = components[components.length - 1];
-        const parent = traverse(fileSystem, parentComponents, true);
-        return {parent, name};
+        // FIX: if path is at root level, parent is fileSystem itself
+        const parent = parentComponents.length === 0
+            ? fileSystem
+            : traverse(fileSystem, parentComponents, true);
+        return parent ? { parent, name } : null;
     }
     
     function getParentAndName(path) {
         const components = path.split('/').filter(c => c);
-        if (components.length < 1) {
-            return null;
-        }
+        if (components.length < 1) return null;
         const parentComponents = components.slice(0, -1);
         const name = components[components.length - 1];
-        const parent = traverse(fileSystem, parentComponents, false);
-        if (parent) {
-            return {parent, name};
-        } else {
-            return null;
-        }
+        // FIX: if path is at root level, parent is fileSystem itself
+        const parent = parentComponents.length === 0
+            ? fileSystem
+            : traverse(fileSystem, parentComponents, false);
+        return parent ? { parent, name } : null;
     }
     
     function renderFileSystem() {
         treeRoot.innerHTML = '';
-        
         if (Object.keys(fileSystem).length === 0) {
             hierarchicalEmpty.style.display = 'flex';
             treeRoot.style.display = 'none';
@@ -556,37 +518,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 li.appendChild(row);
                 li.appendChild(childrenContainer);
                 
-                // Add event listener to toggle folder
                 row.querySelector('.tree-toggle').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const path = e.target.getAttribute('data-path');
-                    const childrenContainer = document.querySelector(`.tree-children[data-path="${path}"]`);
+                    const p = e.target.getAttribute('data-path');
+                    const cc = document.querySelector(`.tree-children[data-path="${p}"]`);
                     const toggleIcon = e.target;
                     const folderIcon = row.querySelector('.tree-folder');
                     
-                    if (childrenContainer.classList.contains('open')) {
-                        childrenContainer.classList.remove('open');
+                    if (cc.classList.contains('open')) {
+                        cc.classList.remove('open');
                         toggleIcon.classList.remove('open');
                         folderIcon.classList.remove('open');
                     } else {
-                        childrenContainer.classList.add('open');
+                        cc.classList.add('open');
                         toggleIcon.classList.add('open');
                         folderIcon.classList.add('open');
-                        
-                        // Render children if not already rendered
-                        if (childrenContainer.children.length === 0) {
-                            renderTree(value, childrenContainer, itemPath);
+                        if (cc.children.length === 0) {
+                            renderTree(value, cc, itemPath);
                         }
                     }
                 });
                 
-                // Add click event to folder icon and label
                 row.querySelector('.tree-folder').addEventListener('click', (e) => {
-                    e.target.previousElementSibling.click(); // Click the toggle
+                    e.target.previousElementSibling.click();
                 });
                 
                 row.querySelector('.tree-label').addEventListener('click', (e) => {
-                    e.target.previousElementSibling.previousElementSibling.click(); // Click the toggle
+                    e.target.previousElementSibling.previousElementSibling.click();
                 });
             } else {
                 row.innerHTML = `
@@ -598,16 +556,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 li.appendChild(row);
             }
             
-            // Add event listener to delete button
             row.querySelector('.tree-delete').addEventListener('click', (e) => {
                 e.stopPropagation();
-                const path = e.target.getAttribute('data-path');
-                const result = getParentAndName(path);
-                
+                const p = e.target.getAttribute('data-path');
+                const result = getParentAndName(p);
                 if (result) {
                     const { parent, name } = result;
                     const isFolder = parent[name] !== null;
-                    
                     showConfirmDialog(
                         'Delete Item',
                         `Are you sure you want to delete "${name}"${isFolder ? ' and all its contents' : ''}?`,
@@ -627,27 +582,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     hierarchicalFileBtn.addEventListener('click', () => {
         const path = hierarchicalInput.value.trim();
-        
         if (!path) {
             showNotification('hierarchical-notification', 'Please enter a valid path', 'error');
             return;
         }
-        
         const result = getOrCreateParent(path);
-        
         if (!result) {
             showNotification('hierarchical-notification', 'Invalid path', 'error');
             return;
         }
-        
         const { parent, name } = result;
-        
         if (parent[name] !== undefined) {
             showNotification('hierarchical-notification', `An item with the name "${name}" already exists at this location`, 'error');
             return;
         }
-        
-        parent[name] = null; // null represents a file
+        parent[name] = null;
         localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
         hierarchicalInput.value = '';
         renderFileSystem();
@@ -656,27 +605,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     hierarchicalFolderBtn.addEventListener('click', () => {
         const path = hierarchicalInput.value.trim();
-        
         if (!path) {
             showNotification('hierarchical-notification', 'Please enter a valid path', 'error');
             return;
         }
-        
         const result = getOrCreateParent(path);
-        
         if (!result) {
             showNotification('hierarchical-notification', 'Invalid path', 'error');
             return;
         }
-        
         const { parent, name } = result;
-        
         if (parent[name] !== undefined) {
             showNotification('hierarchical-notification', `An item with the name "${name}" already exists at this location`, 'error');
             return;
         }
-        
-        parent[name] = {}; // Empty object represents a folder
+        parent[name] = {};
         localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
         hierarchicalInput.value = '';
         renderFileSystem();
@@ -685,28 +628,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     hierarchicalDeleteBtn.addEventListener('click', () => {
         const path = hierarchicalInput.value.trim();
-        
         if (!path) {
             showNotification('hierarchical-notification', 'Please enter a valid path', 'error');
             return;
         }
-        
         const result = getParentAndName(path);
-        
         if (!result) {
             showNotification('hierarchical-notification', 'Path not found', 'error');
             return;
         }
-        
         const { parent, name } = result;
-        
         if (parent[name] === undefined) {
             showNotification('hierarchical-notification', 'Item not found', 'error');
             return;
         }
-        
         const isFolder = parent[name] !== null;
-        
         showConfirmDialog(
             'Delete Item',
             `Are you sure you want to delete "${name}"${isFolder ? ' and all its contents' : ''}?`,
@@ -720,32 +656,23 @@ document.addEventListener('DOMContentLoaded', function() {
         );
     });
     
-    // Initialize hierarchical directory
     renderFileSystem();
     
     // Info tooltips
     document.querySelectorAll('.info-tooltip').forEach(tooltip => {
         const content = tooltip.querySelector('.tooltip-content');
-        
-        // Position the tooltip content
         tooltip.addEventListener('mouseenter', () => {
             const rect = tooltip.getBoundingClientRect();
             const contentRect = content.getBoundingClientRect();
-            
-            // Check if tooltip would go off-screen to the right
             if (rect.left + contentRect.width / 2 > window.innerWidth) {
                 content.style.left = 'auto';
                 content.style.right = '0';
                 content.style.transform = 'translateX(0)';
-            }
-            // Check if tooltip would go off-screen to the left
-            else if (rect.left - contentRect.width / 2 < 0) {
+            } else if (rect.left - contentRect.width / 2 < 0) {
                 content.style.left = '0';
                 content.style.right = 'auto';
                 content.style.transform = 'translateX(0)';
-            }
-            // Center the tooltip
-            else {
+            } else {
                 content.style.left = '50%';
                 content.style.right = 'auto';
                 content.style.transform = 'translateX(-50%)';
